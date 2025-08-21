@@ -1,9 +1,38 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Calendar" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">#d4006d</item>
+        <item name="colorPrimaryVariant">#a00055</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">#d4006d</item>
+        <item name="colorSecondaryVariant">#a00055</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+
+        <!-- Status bar and navigation bar -->
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Background colors -->
+        <item name="android:windowBackground">#000000</item>
+        <item name="colorSurface">#1A1A1A</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#808080</item>
+        <item name="android:textColorHint">#808080</item>
     </style>
 
     <style name="Theme.Calendar" parent="Base.Theme.Calendar" />
+
+    <style name="Theme.Calendar.NoActionBar" parent="Theme.Calendar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
 </resources>
