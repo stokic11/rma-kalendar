@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Detaljni prikaz dana - ovde korisnik vidi hourly raspored i može da kreira/edituje događaje -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -7,7 +6,6 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- Gornji header sa datumom i dugmićima za navigaciju -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,7 +14,6 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Dugme za povratak na glavni ekran -->
         <ImageButton
             android:id="@+id/btn_back"
             android:layout_width="32dp"
@@ -26,7 +23,6 @@
             android:tint="#FFFFFF"
             android:contentDescription="Back" />
 
-        <!-- Prikaz trenutno izabranog datuma -->
         <TextView
             android:id="@+id/tv_selected_date"
             android:layout_width="0dp"
@@ -39,7 +35,6 @@
             android:gravity="center"
             android:layout_marginHorizontal="16dp" />
 
-        <!-- Dugme za dodavanje novog događaja -->
         <Button
             android:id="@+id/btn_add_event"
             android:layout_width="wrap_content"
@@ -52,29 +47,41 @@
 
     </LinearLayout>
 
-    <!-- Sekcija za prikaz praznika (pojavljuje se samo ako je praznik) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#0D1421"
+        android:orientation="vertical"
+        android:background="#1A1A1A"
         android:padding="8dp"
-        android:visibility="gone"
         android:id="@+id/layout_day_info">
 
-        <!-- Tekst koji prikazuje naziv praznika sa ikonom -->
         <TextView
             android:id="@+id/tv_holiday_info"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🎄 Christmas Day"
-            android:textColor="#FFD700"
-            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:padding="8dp"
+            android:layout_marginBottom="4dp"
+            android:background="@android:color/holo_green_light"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_birthday_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎂 Happy Birthday!"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:padding="8dp"
+            android:background="@android:color/holo_orange_light"
             android:visibility="gone" />
 
     </LinearLayout>
 
-    <!-- Glavni scroll kontejner za hourly prikaz -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -82,314 +89,494 @@
         android:fillViewport="true"
         android:scrollbars="none">
 
-        <!-- Horizontalni kontejner za satove levo i događaje desno -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <!-- Leva kolona sa satima (00:00 - 23:00) -->
             <LinearLayout
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="#0A0A0A">
 
-                <!-- Sati od ponoći do 6 ujutru (tamnije boje za noć) -->
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="00:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="00:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="01:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="01:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="02:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="02:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="03:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="03:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="04:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="04:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="05:00"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="05:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="06:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="06:00"
+                        android:textColor="#DDDDDD"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="07:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="07:00"
+                        android:textColor="#DDDDDD"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="08:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="08:00"
+                        android:textColor="#DDDDDD"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="09:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="09:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="10:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="10:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="11:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="11:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <!-- Podne - izdvojen zlatnom bojom -->
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="12:00"
-                    android:textColor="#FFD700"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="12:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="13:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="13:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="14:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="14:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="15:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="15:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="16:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="16:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="17:00"
-                    android:textColor="#DDDDDD"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="17:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <!-- Večernji sati (ljubičasta boja) -->
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="18:00"
-                    android:textColor="#9370DB"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="18:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="19:00"
-                    android:textColor="#9370DB"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="19:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="20:00"
-                    android:textColor="#9370DB"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="20:00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="21:00"
-                    android:textColor="#9370DB"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="21:00"
+                        android:textColor="#DDDDDD"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="22:00"
-                    android:textColor="#4169E1"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="22:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:text="23:00"
-                    android:textColor="#4169E1"
-                    android:textSize="12sp"
-                    android:gravity="center_horizontal|top"
-                    android:paddingTop="4dp"
-                    android:background="@drawable/time_slot_border" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="23:00"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal|top"
+                        android:paddingTop="4dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333" />
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Desna strana gde se prikazuju eventi po satima -->
-            <FrameLayout
-                android:id="@+id/events_container"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="1440dp"
                 android:layout_weight="1"
-                android:background="#111111"
-                android:clickable="true"
-                android:focusable="true">
+                android:orientation="horizontal">
 
-                <!-- Grid linije za vizuelnu referencu (svaki sat ima svoj slot) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <FrameLayout
+                    android:id="@+id/events_container"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_weight="1"
+                    android:background="#111111" />
 
-                    <!-- 24 hourly slota, svaki visok 60dp -->
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
-                    <View android:layout_width="match_parent" android:layout_height="60dp" android:background="@drawable/grid_line" />
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#333333" />
 
-                </LinearLayout>
-
-            </FrameLayout>
+            </LinearLayout>
 
         </LinearLayout>
 

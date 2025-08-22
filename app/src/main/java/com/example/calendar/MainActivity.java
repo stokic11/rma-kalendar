@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private Database database;
     private HolidayService holidayService;
+    private User currentUser;
+    private CalendarDecorator calendarDecorator;
 
     private long currentSelectedDate = 0;
     private Calendar currentCalendar;
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
             setupCalendarListener();
             setupDirectNavigationControls();
             updateMonthYearDisplay();
+            customizeCalendarAppearance();
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -110,20 +113,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnToday.setOnClickListener(v -> {
-            currentCalendar = Calendar.getInstance(); // Reset to current date
+            currentCalendar = Calendar.getInstance();
             navigateCalendar();
             Toast.makeText(this, "Jumped to today", Toast.LENGTH_SHORT).show();
         });
     }
 
     private void navigateCalendar() {
-        // Update the actual CalendarView to show the new month/year
         calendarView.setDate(currentCalendar.getTimeInMillis(), true, true);
         updateMonthYearDisplay();
     }
 
     private void updateMonthYearDisplay() {
-        // Update the year display (highlighted in gold)
         String year = String.valueOf(currentCalendar.get(Calendar.YEAR));
         tvCurrentYear.setText(year);
     }
@@ -134,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(year, month, dayOfMonth);
             currentSelectedDate = calendar.getTimeInMillis();
 
-            // Update current calendar to match selected date's month/year
             currentCalendar.set(year, month, dayOfMonth);
             updateMonthYearDisplay();
 
@@ -143,21 +143,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showDateInfo(long dateMillis) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault());
-        String dateStr = dateFormat.format(new Date(dateMillis));
-        tvInstruction.setText("Selected: " + dateStr);
-
-        checkHoliday(dateMillis);
-    }
-
     private void loadUserData() {
         try {
             String username = sharedPreferences.getString("username", "");
-            User user = database.getUserDetails(username);
+            currentUser = database.getUserDetails(username);
 
-            if (user != null) {
-                tvWelcome.setText("Welcome back, " + user.getFullName() + "!");
+            if (currentUser != null) {
+                tvWelcome.setText("Hi, " + currentUser.getFirstName());
+                calendarDecorator = new CalendarDecorator(this, holidayService, currentUser);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,6 +158,67 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void customizeCalendarAppearance() {
+        if (calendarDecorator == null && currentUser != null) {
+            calendarDecorator = new CalendarDecorator(this, holidayService, currentUser);
+        }
+    }
+
+    private void showDateInfo(long dateMillis) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault());
+        String dateStr = dateFormat.format(new Date(dateMillis));
+
+        StringBuilder infoText = new StringBuilder("Selected: " + dateStr);
+
+        if (calendarDecorator != null) {
+            boolean isBirthdayDate = calendarDecorator.isBirthday(dateMillis);
+            boolean isHolidayDate = calendarDecorator.isHoliday(dateMillis);
+
+            if (isBirthdayDate) {
+                infoText.append(" ⭐ Happy Birthday, ").append(currentUser.getFirstName()).append("!");
+            }
+
+            if (isHolidayDate) {
+                String holidayName = calendarDecorator.getHolidayName(dateMillis);
+                if (isBirthdayDate) {
+                    infoText.append(" & ").append(holidayName).append(" 🎉");
+                } else {
+                    infoText.append(" 🎉 ").append(holidayName);
+                }
+            }
+        } else {
+            boolean isBirthdayDate = isBirthday(dateMillis);
+            if (isBirthdayDate) {
+                infoText.append(" ⭐ Happy Birthday, ").append(currentUser.getFirstName()).append("!");
+            }
+            checkHoliday(dateMillis);
+        }
+
+        tvInstruction.setText(infoText.toString());
+    }
+
+    private boolean isBirthday(long dateMillis) {
+        if (currentUser == null || currentUser.getBirthday() == null) {
+            return false;
+        }
+
+        try {
+            SimpleDateFormat birthdayFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date birthday = birthdayFormat.parse(currentUser.getBirthday());
+
+            Calendar birthdayCalendar = Calendar.getInstance();
+            birthdayCalendar.setTime(birthday);
+
+            Calendar selectedCalendar = Calendar.getInstance();
+            selectedCalendar.setTimeInMillis(dateMillis);
+
+            return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
+                    birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     private void checkHoliday(long dateMillis) {
         holidayService.checkHoliday(dateMillis, new HolidayService.HolidayCallback() {
@@ -172,7 +226,11 @@ public class MainActivity extends AppCompatActivity {
             public void onHolidayFound(String holidayName) {
                 runOnUiThread(() -> {
                     String currentText = tvInstruction.getText().toString();
-                    tvInstruction.setText(currentText + " 🎉 " + holidayName);
+                    if (!currentText.contains("Happy Birthday")) {
+                        tvInstruction.setText(currentText + " 🎉 " + holidayName);
+                    } else {
+                        tvInstruction.setText(currentText + " & " + holidayName);
+                    }
                 });
             }
 

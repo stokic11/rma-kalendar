@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Prilagođeni time picker - omogućava korisniku da bira sat i minut sa strelicama ili direktnim unosom -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,7 +7,6 @@
     android:background="#1A1A1A"
     android:padding="16dp">
 
-    <!-- Sekcija za izbor sata -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -16,7 +14,6 @@
         android:gravity="center"
         android:layout_marginEnd="16dp">
 
-        <!-- Label za sat -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -25,7 +22,6 @@
             android:textSize="12sp"
             android:layout_marginBottom="8dp" />
 
-        <!-- Dugme za povećanje sata (gore strelica) -->
         <TextView
             android:id="@+id/btn_hour_up"
             android:layout_width="48dp"
@@ -38,7 +34,6 @@
             android:clickable="true"
             android:focusable="true" />
 
-        <!-- Input polje za direktan unos sata (0-23) -->
         <EditText
             android:id="@+id/et_hour"
             android:layout_width="64dp"
@@ -53,7 +48,6 @@
             android:maxLength="2"
             android:layout_margin="4dp" />
 
-        <!-- Dugme za smanjenje sata (dole strelica) -->
         <TextView
             android:id="@+id/btn_hour_down"
             android:layout_width="48dp"
@@ -68,7 +62,6 @@
 
     </LinearLayout>
 
-    <!-- Separator između sata i minuta (dvotačka) -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -79,7 +72,6 @@
         android:layout_gravity="center"
         android:layout_marginHorizontal="8dp" />
 
-    <!-- Sekcija za izbor minuta -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -87,7 +79,6 @@
         android:gravity="center"
         android:layout_marginStart="16dp">
 
-        <!-- Label za minut -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -96,7 +87,6 @@
             android:textSize="12sp"
             android:layout_marginBottom="8dp" />
 
-        <!-- Dugme za povećanje minuta (gore strelica, skače za 15min) -->
         <TextView
             android:id="@+id/btn_minute_up"
             android:layout_width="48dp"
@@ -109,7 +99,6 @@
             android:clickable="true"
             android:focusable="true" />
 
-        <!-- Input polje za direktan unos minuta (0-59) -->
         <EditText
             android:id="@+id/et_minute"
             android:layout_width="64dp"
@@ -124,7 +113,6 @@
             android:maxLength="2"
             android:layout_margin="4dp" />
 
-        <!-- Dugme za smanjenje minuta (dole strelica, skače za 15min) -->
         <TextView
             android:id="@+id/btn_minute_down"
             android:layout_width="48dp"

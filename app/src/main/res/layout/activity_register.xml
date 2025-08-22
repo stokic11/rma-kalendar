@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ekran za registraciju novih korisnika - ovde se unose svi potrebni podaci za nalog -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -7,7 +6,6 @@
     android:background="#000000"
     android:fillViewport="true">
 
-    <!-- Glavni kontejner sa scroll funkcijom zbog mnogo input polja -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,7 +15,6 @@
         android:paddingTop="60dp"
         android:paddingBottom="60dp">
 
-        <!-- Naslov sekcija -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -25,7 +22,6 @@
             android:gravity="center"
             android:layout_marginBottom="40dp">
 
-            <!-- Glavni naslov -->
             <TextView
                 android:id="@+id/tv_title"
                 android:layout_width="wrap_content"
@@ -36,7 +32,6 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Podnaslov -->
             <TextView
                 android:id="@+id/tv_subtitle"
                 android:layout_width="wrap_content"
@@ -47,21 +42,18 @@
 
         </LinearLayout>
 
-        <!-- Sva input polja za registraciju -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginBottom="30dp">
 
-            <!-- Polje za ime -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="25dp">
 
-                <!-- Label za ime -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -71,7 +63,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za ime -->
                 <EditText
                     android:id="@+id/et_first_name"
                     android:layout_width="match_parent"
@@ -88,14 +79,12 @@
 
             </LinearLayout>
 
-            <!-- Polje za prezime -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="25dp">
 
-                <!-- Label za prezime -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -105,7 +94,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za prezime -->
                 <EditText
                     android:id="@+id/et_last_name"
                     android:layout_width="match_parent"
@@ -122,14 +110,12 @@
 
             </LinearLayout>
 
-            <!-- Polje za datum rođenja -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="25dp">
 
-                <!-- Label za rođendan -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -139,7 +125,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za rođendan (otvara date picker kada se klikne) -->
                 <EditText
                     android:id="@+id/et_birthday"
                     android:layout_width="match_parent"
@@ -157,14 +142,12 @@
 
             </LinearLayout>
 
-            <!-- Polje za korisničko ime -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="25dp">
 
-                <!-- Label za username -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -174,7 +157,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za username (mora biti jedinstveno) -->
                 <EditText
                     android:id="@+id/et_username"
                     android:layout_width="match_parent"
@@ -191,14 +173,12 @@
 
             </LinearLayout>
 
-            <!-- Polje za lozinku -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="25dp">
 
-                <!-- Label za password -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -208,7 +188,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za password (sakriveno) -->
                 <EditText
                     android:id="@+id/et_password"
                     android:layout_width="match_parent"
@@ -225,14 +204,12 @@
 
             </LinearLayout>
 
-            <!-- Polje za potvrdu lozinke -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginBottom="35dp">
 
-                <!-- Label za potvrdu password-a -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -242,7 +219,6 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Input za potvrdu password-a (mora da se slaže sa password-om) -->
                 <EditText
                     android:id="@+id/et_confirm_password"
                     android:layout_width="match_parent"
@@ -259,7 +235,6 @@
 
             </LinearLayout>
 
-            <!-- Dugme za kreiranje naloga -->
             <Button
                 android:id="@+id/btn_register"
                 android:layout_width="match_parent"
@@ -273,14 +248,12 @@
 
         </LinearLayout>
 
-        <!-- Link za vraćanje na login ako korisnik već ima nalog -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center">
 
-            <!-- Obični tekst -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -288,7 +261,6 @@
                 android:textColor="#808080"
                 android:textSize="14sp" />
 
-            <!-- Klikabilan link za login -->
             <TextView
                 android:id="@+id/tv_login"
                 android:layout_width="wrap_content"

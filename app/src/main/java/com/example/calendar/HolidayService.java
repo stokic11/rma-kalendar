@@ -38,6 +38,14 @@ public class HolidayService {
         holidays.put("12-31", "New Year's Eve");
     }
 
+    public boolean isHolidayDate(String dateKey) {
+        return holidays.containsKey(dateKey);
+    }
+
+    public String getHolidayName(String dateKey) {
+        return holidays.get(dateKey);
+    }
+
     public void checkHoliday(long dateMillis, HolidayCallback callback) {
         new HolidayTask(callback, dateMillis).execute();
     }

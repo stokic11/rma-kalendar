@@ -25,6 +25,7 @@ public class DayViewActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private TextView tvSelectedDate;
     private TextView tvHolidayInfo;
+    private TextView tvBirthdayInfo;
     private LinearLayout layoutDayInfo;
     private Button btnAddEvent;
     private FrameLayout eventsContainer;
@@ -34,6 +35,7 @@ public class DayViewActivity extends AppCompatActivity {
     private List<CalendarEvent> events;
     private long selectedDateMillis;
     private int currentUserId;
+    private User currentUser;
     private static final int HOUR_HEIGHT_DP = 60;
     private float startY = 0;
     private float startX = 0;
@@ -51,7 +53,7 @@ public class DayViewActivity extends AppCompatActivity {
         events = new ArrayList<>();
 
         String username = sharedPreferences.getString("username", "");
-        User currentUser = database.getUserByUsername(username);
+        currentUser = database.getUserByUsername(username);
         if (currentUser != null) {
             currentUserId = currentUser.getId();
         } else {
@@ -64,6 +66,7 @@ public class DayViewActivity extends AppCompatActivity {
         selectedDateMillis = getIntent().getLongExtra("selected_date", System.currentTimeMillis());
         loadDateInfo(selectedDateMillis);
         checkHolidays(selectedDateMillis);
+        checkBirthday(selectedDateMillis);
         loadEventsFromDatabase();
         renderEvents();
     }
@@ -72,6 +75,7 @@ public class DayViewActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btn_back);
         tvSelectedDate = findViewById(R.id.tv_selected_date);
         tvHolidayInfo = findViewById(R.id.tv_holiday_info);
+        tvBirthdayInfo = findViewById(R.id.tv_birthday_info);
         layoutDayInfo = findViewById(R.id.layout_day_info);
         btnAddEvent = findViewById(R.id.btn_add_event);
         eventsContainer = findViewById(R.id.events_container);
@@ -118,13 +122,67 @@ public class DayViewActivity extends AppCompatActivity {
         tvSelectedDate.setText(dateFormat.format(new Date(selectedDateMillis)));
     }
 
+    private void checkBirthday(long selectedDateMillis) {
+        if (isBirthday(selectedDateMillis)) {
+            tvBirthdayInfo.setText("🎂 Happy Birthday, " + currentUser.getFirstName() + "!");
+            tvBirthdayInfo.setVisibility(View.VISIBLE);
+            tvBirthdayInfo.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+            tvBirthdayInfo.setPadding(16, 8, 16, 8);
+        } else {
+            tvBirthdayInfo.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isBirthday(long dateMillis) {
+        if (currentUser == null || currentUser.getBirthday() == null || currentUser.getBirthday().trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            String birthdayStr = currentUser.getBirthday().trim();
+            SimpleDateFormat[] formats = {
+                new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()),
+                new SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()),
+                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()),
+                new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+            };
+
+            Date birthday = null;
+            for (SimpleDateFormat format : formats) {
+                try {
+                    birthday = format.parse(birthdayStr);
+                    if (birthday != null) break;
+                } catch (Exception e) {
+                }
+            }
+
+            if (birthday == null) {
+                return false;
+            }
+
+            Calendar birthdayCalendar = Calendar.getInstance();
+            birthdayCalendar.setTime(birthday);
+
+            Calendar selectedCalendar = Calendar.getInstance();
+            selectedCalendar.setTimeInMillis(dateMillis);
+
+            return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
+                   birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void checkHolidays(long selectedDateMillis) {
         holidayService.checkHoliday(selectedDateMillis, new HolidayService.HolidayCallback() {
             @Override
             public void onHolidayFound(String holidayName) {
                 runOnUiThread(() -> {
-                    tvHolidayInfo.setText(holidayName);
+                    tvHolidayInfo.setText("🎉 " + holidayName);
                     tvHolidayInfo.setVisibility(View.VISIBLE);
+                    tvHolidayInfo.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                    tvHolidayInfo.setPadding(16, 8, 16, 8);
                 });
             }
 
