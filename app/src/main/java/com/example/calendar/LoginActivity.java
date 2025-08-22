@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class LoginActivity extends AppCompatActivity {
-
     private EditText etUsername, etPassword;
     private Button btnLogin;
     private TextView tvRegister, tvTitle;
@@ -25,7 +24,6 @@ public class LoginActivity extends AppCompatActivity {
 
         try {
             setContentView(R.layout.activity_login);
-
             database = new Database(this);
             sharedPreferences = getSharedPreferences("user_session", MODE_PRIVATE);
 
@@ -54,10 +52,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnLogin.setOnClickListener(v -> attemptLogin());
-
-        tvRegister.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-        });
+        tvRegister.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
     }
 
     private void attemptLogin() {

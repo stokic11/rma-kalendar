@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="3dp"
+    app:strokeWidth="2dp"
+    app:strokeColor="#FFFFFF"
+    android:layout_margin="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#4285F4"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tv_event_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Meeting"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tv_event_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="09:00 - 10:30"
+            android:textColor="#E3F2FD"
+            android:textSize="10sp"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_event_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Team standup meeting"
+            android:textColor="#E3F2FD"
+            android:textSize="10sp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

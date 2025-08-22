@@ -16,7 +16,6 @@ import java.util.Calendar;
 import java.util.Locale;
 
 public class RegisterActivity extends AppCompatActivity {
-
     private EditText etFirstName, etLastName, etBirthday, etUsername, etPassword, etConfirmPassword;
     private Button btnRegister;
     private TextView tvLogin, tvTitle;
@@ -26,13 +25,10 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         try {
             setContentView(R.layout.activity_register);
-
             database = new Database(this);
             calendar = Calendar.getInstance();
-
             initViews();
             setupClickListeners();
         } catch (Exception e) {
@@ -56,12 +52,10 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnRegister.setOnClickListener(v -> attemptRegistration());
-
         tvLogin.setOnClickListener(v -> {
             startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
             finish();
         });
-
         etBirthday.setOnClickListener(v -> showDatePicker());
         etBirthday.setFocusable(false);
         etBirthday.setClickable(true);
@@ -100,49 +94,41 @@ public class RegisterActivity extends AppCompatActivity {
             etFirstName.requestFocus();
             return;
         }
-
         if (TextUtils.isEmpty(lastName)) {
             Toast.makeText(this, "Last name is required", Toast.LENGTH_SHORT).show();
             etLastName.requestFocus();
             return;
         }
-
         if (TextUtils.isEmpty(birthday)) {
             Toast.makeText(this, "Birthday is required", Toast.LENGTH_SHORT).show();
             etBirthday.requestFocus();
             return;
         }
-
         if (TextUtils.isEmpty(username)) {
             Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
             etUsername.requestFocus();
             return;
         }
-
         if (username.length() < 3) {
             Toast.makeText(this, "Username must be at least 3 characters", Toast.LENGTH_SHORT).show();
             etUsername.requestFocus();
             return;
         }
-
         if (TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
             etPassword.requestFocus();
             return;
         }
-
         if (password.length() < 6) {
             Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
             etPassword.requestFocus();
             return;
         }
-
         if (!password.equals(confirmPassword)) {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
             etConfirmPassword.requestFocus();
             return;
         }
-
         if (database.usernameExists(username)) {
             Toast.makeText(this, "Username already exists", Toast.LENGTH_SHORT).show();
             etUsername.requestFocus();
@@ -150,9 +136,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         try {
-            boolean registrationResult = database.registerUser(firstName, lastName, birthday, username, password);
-
-            if (registrationResult) {
+            if (database.registerUser(firstName, lastName, birthday, username, password)) {
                 Toast.makeText(this, "Registration successful! Please login.", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();

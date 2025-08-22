@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="TimeSlotButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:layout_margin">2dp</item>
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="NumberPickerTheme">
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#808080</item>
+        <item name="android:colorControlNormal">#FFFFFF</item>
+        <item name="android:colorAccent">#4CAF50</item>
+    </style>
+
+    <style name="CalendarDateTextAppearance">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+</resources>
