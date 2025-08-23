@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,8 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.GravityCompat;
@@ -25,8 +28,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,9 +55,11 @@ public class MainActivity extends AppCompatActivity {
     private HolidayService holidayService;
     private User currentUser;
     private CalendarDecorator calendarDecorator;
+    private List<Birthday> userBirthdays;
 
     private long currentSelectedDate = 0;
     private Calendar currentCalendar;
+    private ActivityResultLauncher<String> requestPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +68,20 @@ public class MainActivity extends AppCompatActivity {
         try {
             EdgeToEdge.enable(this);
             setContentView(R.layout.activity_main);
+
+            // Initialize permission launcher
+            requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+                        // Check for immediate notifications
+                        BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+                    } else {
+                        Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            );
 
             sharedPreferences = getSharedPreferences("user_session", MODE_PRIVATE);
             database = new Database(this);
@@ -78,9 +99,16 @@ public class MainActivity extends AppCompatActivity {
             setupBackPressedCallback();
             applyButtonStyling();
             loadUserData();
+            loadUserBirthdays();
             setupCalendarListener();
             setupNavigationControls();
             customizeCalendarAppearance();
+
+            // Initialize birthday notification system
+            BirthdayNotificationService.scheduleDailyNotificationCheck(this);
+
+            // Request notification permission if needed
+            requestNotificationPermission();
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -92,6 +120,20 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Error starting main activity: " + e.getMessage(), Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
+        }
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!BirthdayNotificationService.hasNotificationPermission(this)) {
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            } else {
+                // Check for immediate notifications if permission already granted
+                BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+            }
+        } else {
+            // For older versions, check immediate notifications
+            BirthdayNotificationService.checkAndSendImmediateNotifications(this);
         }
     }
 
@@ -275,6 +317,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void loadUserBirthdays() {
+        String username = sharedPreferences.getString("username", "");
+        currentUser = database.getUserByUsername(username);
+        if (currentUser != null) {
+            userBirthdays = database.getBirthdaysForUser(currentUser.getId());
+            updateCalendarDecorators();
+        }
+    }
+
+    private void updateCalendarDecorators() {
+        if (calendarDecorator != null) {
+            calendarDecorator.setBirthdays(userBirthdays);
+        }
+    }
+
     private void customizeCalendarAppearance() {
         if (calendarDecorator == null && currentUser != null) {
             calendarDecorator = new CalendarDecorator(this, holidayService, currentUser);
@@ -287,27 +344,30 @@ public class MainActivity extends AppCompatActivity {
 
         StringBuilder infoText = new StringBuilder("Selected: " + dateStr);
 
-        if (calendarDecorator != null) {
-            boolean isBirthdayDate = calendarDecorator.isBirthday(dateMillis);
-            boolean isHolidayDate = calendarDecorator.isHoliday(dateMillis);
+        boolean isUserBirthdayDate = isBirthday(dateMillis);
+        List<Birthday> customBirthdays = database.getBirthdaysForDate(currentUser.getId(), dateMillis);
+        boolean hasCustomBirthdays = !customBirthdays.isEmpty();
 
-            if (isBirthdayDate) {
-                infoText.append(" ⭐ Happy Birthday, ").append(currentUser.getFirstName()).append("!");
-            }
+        if (isUserBirthdayDate) {
+            infoText.append(" - Happy Birthday, ").append(currentUser.getFirstName()).append("!");
+        }
 
-            if (isHolidayDate) {
-                String holidayName = calendarDecorator.getHolidayName(dateMillis);
-                if (isBirthdayDate) {
-                    infoText.append(" & ").append(holidayName).append(" 🎉");
-                } else {
-                    infoText.append(" 🎉 ").append(holidayName);
+        if (hasCustomBirthdays) {
+            for (Birthday birthday : customBirthdays) {
+                infoText.append(" - Birthday: ").append(birthday.getNamesText());
+                if (!birthday.getDescription().isEmpty()) {
+                    infoText.append(" (").append(birthday.getDescription()).append(")");
                 }
             }
-        } else {
-            boolean isBirthdayDate = isBirthday(dateMillis);
-            if (isBirthdayDate) {
-                infoText.append(" ⭐ Happy Birthday, ").append(currentUser.getFirstName()).append("!");
+        }
+
+        if (calendarDecorator != null) {
+            boolean isHolidayDate = calendarDecorator.isHoliday(dateMillis);
+            if (isHolidayDate) {
+                String holidayName = calendarDecorator.getHolidayName(dateMillis);
+                infoText.append(" - Holiday: ").append(holidayName);
             }
+        } else {
             checkHoliday(dateMillis);
         }
 
@@ -374,5 +434,32 @@ public class MainActivity extends AppCompatActivity {
 
         startActivity(new Intent(this, LoginActivity.class));
         finish();
+    }
+
+    private boolean hasBirthdayOnDate(long dateMillis) {
+        Calendar targetCal = Calendar.getInstance();
+        targetCal.setTimeInMillis(dateMillis);
+        int targetMonth = targetCal.get(Calendar.MONTH);
+        int targetDay = targetCal.get(Calendar.DAY_OF_MONTH);
+
+        for (Birthday birthday : userBirthdays) {
+            Calendar birthdayCal = Calendar.getInstance();
+            birthdayCal.setTimeInMillis(birthday.getDateMillis());
+
+            if (birthdayCal.get(Calendar.MONTH) == targetMonth &&
+                    birthdayCal.get(Calendar.DAY_OF_MONTH) == targetDay) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadUserBirthdays();
+        if (currentSelectedDate != 0) {
+            showDateInfo(currentSelectedDate);
+        }
     }
 }

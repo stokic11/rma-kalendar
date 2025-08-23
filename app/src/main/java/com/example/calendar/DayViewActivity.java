@@ -33,6 +33,7 @@ public class DayViewActivity extends AppCompatActivity {
     private Database database;
     private SharedPreferences sharedPreferences;
     private List<CalendarEvent> events;
+    private List<Birthday> birthdays;
     private long selectedDateMillis;
     private int currentUserId;
     private User currentUser;
@@ -51,6 +52,7 @@ public class DayViewActivity extends AppCompatActivity {
         database = new Database(this);
         sharedPreferences = getSharedPreferences("user_session", MODE_PRIVATE);
         events = new ArrayList<>();
+        birthdays = new ArrayList<>();
 
         String username = sharedPreferences.getString("username", "");
         currentUser = database.getUserByUsername(username);
@@ -68,7 +70,9 @@ public class DayViewActivity extends AppCompatActivity {
         checkHolidays(selectedDateMillis);
         checkBirthday(selectedDateMillis);
         loadEventsFromDatabase();
+        loadBirthdaysFromDatabase();
         renderEvents();
+        checkCustomBirthdays(selectedDateMillis);
     }
 
     private void initViews() {
@@ -216,6 +220,34 @@ public class DayViewActivity extends AppCompatActivity {
         events = database.getEventsForUserByDate(currentUserId, dayStart.getTimeInMillis(), dayEnd.getTimeInMillis());
     }
 
+    private void loadBirthdaysFromDatabase() {
+        birthdays = database.getBirthdaysForDate(currentUserId, selectedDateMillis);
+    }
+
+    private void checkCustomBirthdays(long selectedDateMillis) {
+        List<Birthday> todaysBirthdays = database.getBirthdaysForDate(currentUserId, selectedDateMillis);
+        if (!todaysBirthdays.isEmpty()) {
+            StringBuilder birthdayText = new StringBuilder();
+            for (int i = 0; i < todaysBirthdays.size(); i++) {
+                Birthday birthday = todaysBirthdays.get(i);
+                if (i > 0) birthdayText.append("\n");
+                birthdayText.append("Birthday: ").append(birthday.getNamesText());
+                if (!birthday.getDescription().isEmpty()) {
+                    birthdayText.append(" - ").append(birthday.getDescription());
+                }
+            }
+
+            TextView birthdayInfoView = new TextView(this);
+            birthdayInfoView.setText(birthdayText.toString());
+            birthdayInfoView.setTextColor(getResources().getColor(android.R.color.white));
+            birthdayInfoView.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+            birthdayInfoView.setPadding(16, 8, 16, 8);
+            birthdayInfoView.setVisibility(View.VISIBLE);
+
+            layoutDayInfo.addView(birthdayInfoView);
+        }
+    }
+
     private void renderEvents() {
         eventsContainer.removeAllViews();
         for (CalendarEvent event : events) {
@@ -340,7 +372,7 @@ public class DayViewActivity extends AppCompatActivity {
 
         btnBirthday.setOnClickListener(v -> {
             dialog.dismiss();
-            Toast.makeText(this, "Birthday feature coming soon!", Toast.LENGTH_SHORT).show();
+            showCreateBirthdayDialog();
         });
 
         btnReminder.setOnClickListener(v -> {
@@ -377,7 +409,7 @@ public class DayViewActivity extends AppCompatActivity {
 
         btnBirthday.setOnClickListener(v -> {
             dialog.dismiss();
-            Toast.makeText(this, "Birthday feature coming soon!", Toast.LENGTH_SHORT).show();
+            showCreateBirthdayDialog();
         });
 
         btnReminder.setOnClickListener(v -> {
@@ -453,6 +485,76 @@ public class DayViewActivity extends AppCompatActivity {
                 })
                 .setNeutralButton("Cancel", null)
                 .show();
+    }
+
+    private void showCreateBirthdayDialog() {
+        BirthdayCreationHelper helper = new BirthdayCreationHelper(this, selectedDateMillis, birthday -> {
+            if (database.saveBirthday(birthday, currentUserId)) {
+                Toast.makeText(this, "Birthday created successfully!", Toast.LENGTH_SHORT).show();
+                loadBirthdaysFromDatabase();
+                renderEvents();
+                refreshCustomBirthdayDisplay();
+
+                // Trigger immediate notification check for testing
+                BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+            } else {
+                Toast.makeText(this, "Failed to create birthday", Toast.LENGTH_SHORT).show();
+            }
+        });
+        helper.showCreateBirthdayDialog();
+    }
+
+    private void showBirthdayDetailsDialog(Birthday birthday) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String message = "Names: " + birthday.getNamesText();
+        if (!birthday.getDescription().isEmpty()) {
+            message += "\nDescription: " + birthday.getDescription();
+        }
+        message += "\nYearly recurrence: " + (birthday.isYearlyRecurrence() ? "Yes" : "No");
+        message += "\nNotifications: " + (birthday.isNotificationsEnabled() ? "Enabled" : "Disabled");
+
+        builder.setTitle("Birthday Details")
+                .setMessage(message)
+                .setPositiveButton("Edit", (dialog, which) -> {
+                    showEditBirthdayDialog(birthday);
+                })
+                .setNegativeButton("Delete", (dialog, which) -> {
+                    boolean success = database.deleteBirthday(birthday.getId(), currentUserId);
+                    if (success) {
+                        loadBirthdaysFromDatabase();
+                        renderEvents();
+                        refreshCustomBirthdayDisplay();
+                        Toast.makeText(this, "Birthday deleted successfully!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Failed to delete birthday", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("Close", null)
+                .show();
+    }
+
+    private void showEditBirthdayDialog(Birthday birthday) {
+        BirthdayCreationHelper helper = new BirthdayCreationHelper(this, birthday, updatedBirthday -> {
+            if (database.updateBirthday(birthday.getId(), updatedBirthday, currentUserId)) {
+                Toast.makeText(this, "Birthday updated successfully!", Toast.LENGTH_SHORT).show();
+                loadBirthdaysFromDatabase();
+                renderEvents();
+                refreshCustomBirthdayDisplay();
+            } else {
+                Toast.makeText(this, "Failed to update birthday", Toast.LENGTH_SHORT).show();
+            }
+        });
+        helper.showCreateBirthdayDialog();
+    }
+
+    private void refreshCustomBirthdayDisplay() {
+        for (int i = layoutDayInfo.getChildCount() - 1; i >= 0; i--) {
+            View child = layoutDayInfo.getChildAt(i);
+            if (child instanceof TextView && child != tvSelectedDate && child != tvHolidayInfo && child != tvBirthdayInfo) {
+                layoutDayInfo.removeView(child);
+            }
+        }
+        checkCustomBirthdays(selectedDateMillis);
     }
 
     private float dpToPx(float dp) {

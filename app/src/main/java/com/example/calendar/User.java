@@ -7,7 +7,8 @@ public class User {
     private String birthday;
     private String username;
 
-    public User() {}
+    public User() {
+    }
 
     public User(String firstName, String lastName, String birthday, String username) {
         this.firstName = firstName;
@@ -60,4 +61,3 @@ public class User {
         return firstName + " " + lastName;
     }
 }
-

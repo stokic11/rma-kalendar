@@ -29,8 +29,17 @@ public class Database extends SQLiteOpenHelper {
     private static final String EVENT_END_TIME = "end_time";
     private static final String EVENT_COLOR = "color";
 
+    private static final String TABLE_BIRTHDAYS = "birthdays";
+    private static final String BIRTHDAY_ID = "birthday_id";
+    private static final String BIRTHDAY_NAMES = "names";
+    private static final String BIRTHDAY_DESCRIPTION = "description";
+    private static final String BIRTHDAY_DATE = "birthday_date";
+    private static final String BIRTHDAY_YEARLY = "yearly_recurrence";
+    private static final String BIRTHDAY_NOTIFICATIONS = "notifications_enabled";
+    private static final String BIRTHDAY_COLOR = "color";
+
     public Database(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, 2);
     }
 
     @Override
@@ -52,10 +61,33 @@ public class Database extends SQLiteOpenHelper {
                 EVENT_END_TIME + " TEXT NOT NULL, " +
                 EVENT_COLOR + " INTEGER NOT NULL, " +
                 "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+
+        db.execSQL("CREATE TABLE " + TABLE_BIRTHDAYS + " (" +
+                BIRTHDAY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                USER_ID + " INTEGER NOT NULL, " +
+                BIRTHDAY_NAMES + " TEXT NOT NULL, " +
+                BIRTHDAY_DESCRIPTION + " TEXT, " +
+                BIRTHDAY_DATE + " TEXT NOT NULL, " +
+                BIRTHDAY_YEARLY + " INTEGER NOT NULL, " +
+                BIRTHDAY_NOTIFICATIONS + " INTEGER NOT NULL, " +
+                BIRTHDAY_COLOR + " INTEGER NOT NULL, " +
+                "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE " + TABLE_BIRTHDAYS + " (" +
+                    BIRTHDAY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    USER_ID + " INTEGER NOT NULL, " +
+                    BIRTHDAY_NAMES + " TEXT NOT NULL, " +
+                    BIRTHDAY_DESCRIPTION + " TEXT, " +
+                    BIRTHDAY_DATE + " TEXT NOT NULL, " +
+                    BIRTHDAY_YEARLY + " INTEGER NOT NULL, " +
+                    BIRTHDAY_NOTIFICATIONS + " INTEGER NOT NULL, " +
+                    BIRTHDAY_COLOR + " INTEGER NOT NULL, " +
+                    "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+        }
     }
 
     private String hashPassword(String password) {
@@ -111,6 +143,31 @@ public class Database extends SQLiteOpenHelper {
                 endTime,
                 cursor.getInt(cursor.getColumnIndexOrThrow(EVENT_COLOR))
         );
+    }
+
+    private Birthday createBirthdayFromCursor(Cursor cursor) {
+        String namesStr = cursor.getString(cursor.getColumnIndexOrThrow(BIRTHDAY_NAMES));
+        String[] namesArray = namesStr.split(",");
+        List<String> names = new ArrayList<>();
+        for (String name : namesArray) {
+            if (!name.trim().isEmpty()) {
+                names.add(name.trim());
+            }
+        }
+
+        String dateStr = cursor.getString(cursor.getColumnIndexOrThrow(BIRTHDAY_DATE));
+        long dateMillis = dateTimeStringToMillis(dateStr);
+
+        Birthday birthday = new Birthday(
+                names,
+                cursor.getString(cursor.getColumnIndexOrThrow(BIRTHDAY_DESCRIPTION)),
+                dateMillis,
+                cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_YEARLY)) == 1,
+                cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_NOTIFICATIONS)) == 1
+        );
+        birthday.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_ID))));
+        birthday.setColor(cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_COLOR)));
+        return birthday;
     }
 
     public boolean createUser(String firstName, String lastName, String birthday, String username, String password) {
@@ -377,6 +434,91 @@ public class Database extends SQLiteOpenHelper {
             return db.update(TABLE_EVENTS, values,
                     USER_ID + " = ? AND " + EVENT_TITLE + " = ? AND " + EVENT_START_TIME + " = ? AND " + EVENT_END_TIME + " = ?",
                     new String[]{String.valueOf(userId), oldEvent.getTitle(), oldStartTimeStr, oldEndTimeStr}) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean saveBirthday(Birthday birthday, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues values = new ContentValues();
+            values.put(USER_ID, userId);
+            values.put(BIRTHDAY_NAMES, String.join(",", birthday.getNames()));
+            values.put(BIRTHDAY_DESCRIPTION, birthday.getDescription());
+            values.put(BIRTHDAY_DATE, millisToDateTimeString(birthday.getDateMillis()));
+            values.put(BIRTHDAY_YEARLY, birthday.isYearlyRecurrence() ? 1 : 0);
+            values.put(BIRTHDAY_NOTIFICATIONS, birthday.isNotificationsEnabled() ? 1 : 0);
+            values.put(BIRTHDAY_COLOR, birthday.getColor());
+            return db.insert(TABLE_BIRTHDAYS, null, values) != -1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public List<Birthday> getBirthdaysForUser(int userId) {
+        List<Birthday> birthdays = new ArrayList<>();
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_BIRTHDAYS + " WHERE " + USER_ID + " = ?",
+                     new String[]{String.valueOf(userId)})) {
+            if (cursor.moveToFirst()) {
+                do {
+                    birthdays.add(createBirthdayFromCursor(cursor));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return birthdays;
+    }
+
+    public List<Birthday> getBirthdaysForDate(int userId, long dateMillis) {
+        List<Birthday> birthdays = new ArrayList<>();
+        java.util.Calendar targetCal = java.util.Calendar.getInstance();
+        targetCal.setTimeInMillis(dateMillis);
+        int targetMonth = targetCal.get(java.util.Calendar.MONTH);
+        int targetDay = targetCal.get(java.util.Calendar.DAY_OF_MONTH);
+
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_BIRTHDAYS + " WHERE " + USER_ID + " = ?",
+                     new String[]{String.valueOf(userId)})) {
+            if (cursor.moveToFirst()) {
+                do {
+                    Birthday birthday = createBirthdayFromCursor(cursor);
+                    java.util.Calendar birthdayCal = java.util.Calendar.getInstance();
+                    birthdayCal.setTimeInMillis(birthday.getDateMillis());
+
+                    if (birthdayCal.get(java.util.Calendar.MONTH) == targetMonth &&
+                        birthdayCal.get(java.util.Calendar.DAY_OF_MONTH) == targetDay) {
+                        birthdays.add(birthday);
+                    }
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return birthdays;
+    }
+
+    public boolean deleteBirthday(String birthdayId, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            return db.delete(TABLE_BIRTHDAYS, BIRTHDAY_ID + " = ? AND " + USER_ID + " = ?",
+                    new String[]{birthdayId, String.valueOf(userId)}) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean updateBirthday(String birthdayId, Birthday updatedBirthday, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues values = new ContentValues();
+            values.put(BIRTHDAY_NAMES, String.join(",", updatedBirthday.getNames()));
+            values.put(BIRTHDAY_DESCRIPTION, updatedBirthday.getDescription());
+            values.put(BIRTHDAY_DATE, millisToDateTimeString(updatedBirthday.getDateMillis()));
+            values.put(BIRTHDAY_YEARLY, updatedBirthday.isYearlyRecurrence() ? 1 : 0);
+            values.put(BIRTHDAY_NOTIFICATIONS, updatedBirthday.isNotificationsEnabled() ? 1 : 0);
+            values.put(BIRTHDAY_COLOR, updatedBirthday.getColor());
+            return db.update(TABLE_BIRTHDAYS, values, BIRTHDAY_ID + " = ? AND " + USER_ID + " = ?",
+                    new String[]{birthdayId, String.valueOf(userId)}) > 0;
         } catch (Exception e) {
             return false;
         }

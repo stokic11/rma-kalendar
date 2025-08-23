@@ -1,7 +1,10 @@
 package com.example.calendar;
 
 import android.graphics.Color;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class CalendarEvent {
     private String id;
@@ -29,15 +32,19 @@ public class CalendarEvent {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public long getStartTime() { return startTime; }
+    public long getStartTimeMillis() { return startTime; }
     public void setStartTime(long startTime) { this.startTime = startTime; }
     public long getEndTime() { return endTime; }
+    public long getEndTimeMillis() { return endTime; }
     public void setEndTime(long endTime) { this.endTime = endTime; }
     public int getColor() { return color; }
     public void setColor(int color) { this.color = color; }
     public boolean isAllDay() { return isAllDay; }
     public void setAllDay(boolean allDay) { isAllDay = allDay; }
 
-    public int getDurationInMinutes() { return (int) ((endTime - startTime) / (1000 * 60)); }
+    public int getDurationInMinutes() {
+        return (int) ((endTime - startTime) / (1000 * 60));
+    }
 
     public int getStartHour() {
         Calendar cal = Calendar.getInstance();
@@ -64,66 +71,65 @@ public class CalendarEvent {
     }
 
     public String getTimeRange() {
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        return timeFormat.format(new Date(startTime)) + " - " + timeFormat.format(new Date(endTime));
+    }
+
+    public boolean isMultiDay() {
         Calendar startCal = Calendar.getInstance();
         startCal.setTimeInMillis(startTime);
         Calendar endCal = Calendar.getInstance();
         endCal.setTimeInMillis(endTime);
 
-        if (isSameDay(startTime, endTime)) {
-            return String.format("%02d:%02d - %02d:%02d",
-                    startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE),
-                    endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE));
-        } else {
-            return String.format("%02d/%02d %02d:%02d - %02d/%02d %02d:%02d",
-                    startCal.get(Calendar.DAY_OF_MONTH), startCal.get(Calendar.MONTH) + 1,
-                    startCal.get(Calendar.HOUR_OF_DAY), startCal.get(Calendar.MINUTE),
-                    endCal.get(Calendar.DAY_OF_MONTH), endCal.get(Calendar.MONTH) + 1,
-                    endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE));
-        }
+        return startCal.get(Calendar.YEAR) != endCal.get(Calendar.YEAR) ||
+               startCal.get(Calendar.DAY_OF_YEAR) != endCal.get(Calendar.DAY_OF_YEAR);
     }
 
-    public long getStartTimeMillis() { return startTime; }
-    public long getEndTimeMillis() { return endTime; }
+    public int getDayInSequence(long dateMillis) {
+        Calendar eventStart = Calendar.getInstance();
+        eventStart.setTimeInMillis(startTime);
+        eventStart.set(Calendar.HOUR_OF_DAY, 0);
+        eventStart.set(Calendar.MINUTE, 0);
+        eventStart.set(Calendar.SECOND, 0);
+        eventStart.set(Calendar.MILLISECOND, 0);
 
-    public boolean isMultiDay() { return !isSameDay(startTime, endTime); }
+        Calendar targetDate = Calendar.getInstance();
+        targetDate.setTimeInMillis(dateMillis);
+        targetDate.set(Calendar.HOUR_OF_DAY, 0);
+        targetDate.set(Calendar.MINUTE, 0);
+        targetDate.set(Calendar.SECOND, 0);
+        targetDate.set(Calendar.MILLISECOND, 0);
 
-    public int getDayInSequence(long checkDate) {
-        if (!isMultiDay()) return 1;
-        return (int) ((getDayStart(checkDate) - getDayStart(startTime)) / (24 * 60 * 60 * 1000)) + 1;
+        long diffInMillis = targetDate.getTimeInMillis() - eventStart.getTimeInMillis();
+        return (int) (diffInMillis / (1000 * 60 * 60 * 24)) + 1;
     }
 
     public int getTotalDays() {
-        if (!isMultiDay()) return 1;
-        return (int) ((getDayStart(endTime) - getDayStart(startTime)) / (24 * 60 * 60 * 1000)) + 1;
-    }
+        Calendar startCal = Calendar.getInstance();
+        startCal.setTimeInMillis(startTime);
+        startCal.set(Calendar.HOUR_OF_DAY, 0);
+        startCal.set(Calendar.MINUTE, 0);
+        startCal.set(Calendar.SECOND, 0);
+        startCal.set(Calendar.MILLISECOND, 0);
 
-    public boolean occursOnDate(long checkDate) {
-        long checkDayStart = getDayStart(checkDate);
-        long startDayStart = getDayStart(startTime);
-        long endDayStart = getDayStart(endTime);
-        return checkDayStart >= startDayStart && checkDayStart <= endDayStart;
-    }
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTimeInMillis(endTime);
+        endCal.set(Calendar.HOUR_OF_DAY, 0);
+        endCal.set(Calendar.MINUTE, 0);
+        endCal.set(Calendar.SECOND, 0);
+        endCal.set(Calendar.MILLISECOND, 0);
 
-    private boolean isSameDay(long time1, long time2) {
-        return getDayStart(time1) == getDayStart(time2);
-    }
-
-    private long getDayStart(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
+        long diffInMillis = endCal.getTimeInMillis() - startCal.getTimeInMillis();
+        return (int) (diffInMillis / (1000 * 60 * 60 * 24)) + 1;
     }
 
     private int generateRandomColor() {
         int[] colors = {
-                Color.parseColor("#4285F4"), Color.parseColor("#34A853"),
-                Color.parseColor("#FBBC04"), Color.parseColor("#EA4335"),
-                Color.parseColor("#9C27B0"), Color.parseColor("#FF9800"),
-                Color.parseColor("#795548"), Color.parseColor("#607D8B")
+            Color.parseColor("#4285F4"),
+            Color.parseColor("#34A853"),
+            Color.parseColor("#EA4335"),
+            Color.parseColor("#FF9800"),
+            Color.parseColor("#9C27B0")
         };
         return colors[(int) (Math.random() * colors.length)];
     }

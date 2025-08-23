@@ -4,19 +4,27 @@ import android.content.Context;
 import android.graphics.Color;
 import android.widget.CalendarView;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class CalendarDecorator {
     private Context context;
     private HolidayService holidayService;
     private User currentUser;
+    private List<Birthday> userBirthdays;
 
     public CalendarDecorator(Context context, HolidayService holidayService, User currentUser) {
         this.context = context;
         this.holidayService = holidayService;
         this.currentUser = currentUser;
+        this.userBirthdays = new ArrayList<>();
+    }
+
+    public void setBirthdays(List<Birthday> birthdays) {
+        this.userBirthdays = birthdays != null ? new ArrayList<>(birthdays) : new ArrayList<>();
     }
 
     public boolean isHoliday(long dateMillis) {
@@ -32,6 +40,10 @@ public class CalendarDecorator {
     }
 
     public boolean isBirthday(long dateMillis) {
+        return isUserBirthday(dateMillis) || hasCustomBirthday(dateMillis);
+    }
+
+    private boolean isUserBirthday(long dateMillis) {
         if (currentUser == null || currentUser.getBirthday() == null || currentUser.getBirthday().trim().isEmpty()) {
             return false;
         }
@@ -70,6 +82,52 @@ public class CalendarDecorator {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private boolean hasCustomBirthday(long dateMillis) {
+        if (userBirthdays == null || userBirthdays.isEmpty()) {
+            return false;
+        }
+
+        Calendar targetCal = Calendar.getInstance();
+        targetCal.setTimeInMillis(dateMillis);
+        int targetMonth = targetCal.get(Calendar.MONTH);
+        int targetDay = targetCal.get(Calendar.DAY_OF_MONTH);
+
+        for (Birthday birthday : userBirthdays) {
+            Calendar birthdayCal = Calendar.getInstance();
+            birthdayCal.setTimeInMillis(birthday.getDateMillis());
+
+            if (birthdayCal.get(Calendar.MONTH) == targetMonth &&
+                birthdayCal.get(Calendar.DAY_OF_MONTH) == targetDay) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Birthday> getBirthdaysForDate(long dateMillis) {
+        List<Birthday> birthdaysOnDate = new ArrayList<>();
+
+        if (userBirthdays == null || userBirthdays.isEmpty()) {
+            return birthdaysOnDate;
+        }
+
+        Calendar targetCal = Calendar.getInstance();
+        targetCal.setTimeInMillis(dateMillis);
+        int targetMonth = targetCal.get(Calendar.MONTH);
+        int targetDay = targetCal.get(Calendar.DAY_OF_MONTH);
+
+        for (Birthday birthday : userBirthdays) {
+            Calendar birthdayCal = Calendar.getInstance();
+            birthdayCal.setTimeInMillis(birthday.getDateMillis());
+
+            if (birthdayCal.get(Calendar.MONTH) == targetMonth &&
+                birthdayCal.get(Calendar.DAY_OF_MONTH) == targetDay) {
+                birthdaysOnDate.add(birthday);
+            }
+        }
+        return birthdaysOnDate;
     }
 
     public String getDateType(long dateMillis) {
