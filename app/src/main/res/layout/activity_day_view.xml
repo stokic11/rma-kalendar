@@ -42,7 +42,6 @@
             android:text="+ Event"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
-            android:background="@drawable/button_background"
             android:paddingHorizontal="12dp" />
 
     </LinearLayout>

@@ -2,17 +2,24 @@ package com.example.calendar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.CalendarView;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
+import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,8 +35,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView btnPrevYear;
     private TextView btnNextYear;
     private Button btnToday;
-    private Button btnLogout;
     private Button btnOpenDayView;
+    private ImageButton btnMenu;
+    private DrawerLayout drawerLayout;
+    private LinearLayout nav;
+    private LinearLayout navProfileItem;
+    private LinearLayout navLogoutItem;
+    private TextView navUserName;
+    private TextView navUserUsername;
     private SharedPreferences sharedPreferences;
     private Database database;
     private HolidayService holidayService;
@@ -59,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             initViews();
+            setupDrawer();
+            setupBackPressedCallback();
+            applyButtonStyling();
             loadUserData();
             setupCalendarListener();
             setupDirectNavigationControls();
@@ -78,6 +94,34 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void applyButtonStyling() {
+        applyButtonBackground(btnToday, "#d4006d", "#FF69B4", 8);
+        applyButtonBackground(btnOpenDayView, "#d4006d", "#FF69B4", 8);
+    }
+
+    private void applyButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.RECTANGLE);
+        drawable.setColor(android.graphics.Color.parseColor(fillColor));
+        drawable.setStroke(2, android.graphics.Color.parseColor(strokeColor));
+        drawable.setCornerRadius(cornerRadius * getResources().getDisplayMetrics().density);
+        button.setBackground(drawable);
+    }
+
+    private void setupBackPressedCallback() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
+    }
+
     private void initViews() {
         tvWelcome = findViewById(R.id.tv_welcome);
         calendarView = findViewById(R.id.calendar_view);
@@ -86,10 +130,15 @@ public class MainActivity extends AppCompatActivity {
         btnPrevYear = findViewById(R.id.btn_prev_year);
         btnNextYear = findViewById(R.id.btn_next_year);
         btnToday = findViewById(R.id.btn_reset);
-        btnLogout = findViewById(R.id.btn_logout);
         btnOpenDayView = findViewById(R.id.btn_open_day_view);
+        btnMenu = findViewById(R.id.btn_menu);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        nav = findViewById(R.id.nav);
+        navProfileItem = findViewById(R.id.nav_profile_item);
+        navLogoutItem = findViewById(R.id.nav_logout_item);
+        navUserName = findViewById(R.id.nav_user_name);
+        navUserUsername = findViewById(R.id.nav_user_username);
 
-        btnLogout.setOnClickListener(v -> logout());
         btnOpenDayView.setOnClickListener(v -> {
             if (currentSelectedDate != 0) {
                 openDayView(currentSelectedDate);
@@ -97,6 +146,39 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please select a date first", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setupDrawer() {
+        btnMenu.setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        navProfileItem.setOnClickListener(v -> {
+            startActivity(new Intent(this, ProfileActivity.class));
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+
+        navLogoutItem.setOnClickListener(v -> {
+            logout();
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+
+        updateNavigationHeader();
+    }
+
+    private void updateNavigationHeader() {
+        if (currentUser != null) {
+            if (navUserName != null) {
+                navUserName.setText(currentUser.getFullName());
+            }
+            if (navUserUsername != null) {
+                navUserUsername.setText("@" + currentUser.getUsername());
+            }
+        }
     }
 
     private void setupDirectNavigationControls() {
@@ -151,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
             if (currentUser != null) {
                 tvWelcome.setText("Hi, " + currentUser.getFirstName());
                 calendarDecorator = new CalendarDecorator(this, holidayService, currentUser);
+                updateNavigationHeader();
             }
         } catch (Exception e) {
             e.printStackTrace();
