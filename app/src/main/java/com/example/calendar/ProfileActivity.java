@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +22,8 @@ import java.util.Locale;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private EditText etFirstName, etLastName, etBirthday, etUsername;
+    private EditText etFirstName, etLastName, etBirthday;
+    private TextView tvUsername;
     private Button btnEditFirstName, btnEditLastName, btnEditBirthday;
     private Button btnChangePassword;
     private ImageButton btnBackArrow;
@@ -46,7 +49,7 @@ public class ProfileActivity extends AppCompatActivity {
         etFirstName = findViewById(R.id.et_first_name);
         etLastName = findViewById(R.id.et_last_name);
         etBirthday = findViewById(R.id.et_birthday);
-        etUsername = findViewById(R.id.et_username);
+        tvUsername = findViewById(R.id.tv_username);
 
         btnEditFirstName = findViewById(R.id.btn_edit_first_name);
         btnEditLastName = findViewById(R.id.btn_edit_last_name);
@@ -64,7 +67,6 @@ public class ProfileActivity extends AppCompatActivity {
         applyInputLineBackground(etFirstName);
         applyInputLineBackground(etLastName);
         applyInputLineBackground(etBirthday);
-        applyInputLineBackground(etUsername);
     }
 
     private void applyButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
@@ -101,7 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
             etFirstName.setText(currentUser.getFirstName());
             etLastName.setText(currentUser.getLastName());
             etBirthday.setText(currentUser.getBirthday());
-            etUsername.setText(currentUser.getUsername());
+            tvUsername.setText(currentUser.getUsername());
         }
     }
 

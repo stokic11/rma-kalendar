@@ -1,14 +1,17 @@
 package com.example.calendar;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,9 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvWelcome;
     private CalendarView calendarView;
     private TextView tvInstruction;
-    private TextView tvCurrentYear;
-    private TextView btnPrevYear;
-    private TextView btnNextYear;
+    private Button btnMonthPicker;
+    private Button btnYearPicker;
     private Button btnToday;
     private Button btnOpenDayView;
     private ImageButton btnMenu;
@@ -77,8 +79,7 @@ public class MainActivity extends AppCompatActivity {
             applyButtonStyling();
             loadUserData();
             setupCalendarListener();
-            setupDirectNavigationControls();
-            updateMonthYearDisplay();
+            setupNavigationControls();
             customizeCalendarAppearance();
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -97,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
     private void applyButtonStyling() {
         applyButtonBackground(btnToday, "#d4006d", "#FF69B4", 8);
         applyButtonBackground(btnOpenDayView, "#d4006d", "#FF69B4", 8);
+        applyButtonBackground(btnMonthPicker, "#d4006d", "#FF69B4", 8);
+        applyButtonBackground(btnYearPicker, "#d4006d", "#FF69B4", 8);
     }
 
     private void applyButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
@@ -126,9 +129,8 @@ public class MainActivity extends AppCompatActivity {
         tvWelcome = findViewById(R.id.tv_welcome);
         calendarView = findViewById(R.id.calendar_view);
         tvInstruction = findViewById(R.id.tv_instruction);
-        tvCurrentYear = findViewById(R.id.tv_current_year);
-        btnPrevYear = findViewById(R.id.btn_prev_year);
-        btnNextYear = findViewById(R.id.btn_next_year);
+        btnMonthPicker = findViewById(R.id.btn_month_picker);
+        btnYearPicker = findViewById(R.id.btn_year_picker);
         btnToday = findViewById(R.id.btn_reset);
         btnOpenDayView = findViewById(R.id.btn_open_day_view);
         btnMenu = findViewById(R.id.btn_menu);
@@ -181,34 +183,69 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupDirectNavigationControls() {
-        btnPrevYear.setOnClickListener(v -> {
-            currentCalendar.add(Calendar.YEAR, -1);
-            navigateCalendar();
-            Toast.makeText(this, "Year: " + currentCalendar.get(Calendar.YEAR), Toast.LENGTH_SHORT).show();
-        });
-
-        btnNextYear.setOnClickListener(v -> {
-            currentCalendar.add(Calendar.YEAR, 1);
-            navigateCalendar();
-            Toast.makeText(this, "Year: " + currentCalendar.get(Calendar.YEAR), Toast.LENGTH_SHORT).show();
-        });
+    private void setupNavigationControls() {
+        btnMonthPicker.setOnClickListener(v -> showMonthPickerDialog());
+        btnYearPicker.setOnClickListener(v -> showYearPickerDialog());
 
         btnToday.setOnClickListener(v -> {
             currentCalendar = Calendar.getInstance();
             navigateCalendar();
-            Toast.makeText(this, "Jumped to today", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void showMonthPickerDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_month_picker, null);
+        NumberPicker monthPicker = dialogView.findViewById(R.id.month_picker);
+
+        String[] months = {"January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"};
+
+        monthPicker.setMinValue(0);
+        monthPicker.setMaxValue(11);
+        monthPicker.setDisplayedValues(months);
+        monthPicker.setValue(currentCalendar.get(Calendar.MONTH));
+        monthPicker.setWrapSelectorWheel(true);
+
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
+                .setView(dialogView)
+                .create();
+
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btn_ok).setOnClickListener(v -> {
+            currentCalendar.set(Calendar.MONTH, monthPicker.getValue());
+            navigateCalendar();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void showYearPickerDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_year_picker, null);
+        NumberPicker yearPicker = dialogView.findViewById(R.id.year_picker);
+
+        int currentYear = currentCalendar.get(Calendar.YEAR);
+        yearPicker.setMinValue(1900);
+        yearPicker.setMaxValue(2100);
+        yearPicker.setValue(currentYear);
+        yearPicker.setWrapSelectorWheel(true);
+
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
+                .setView(dialogView)
+                .create();
+
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btn_ok).setOnClickListener(v -> {
+            currentCalendar.set(Calendar.YEAR, yearPicker.getValue());
+            navigateCalendar();
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     private void navigateCalendar() {
         calendarView.setDate(currentCalendar.getTimeInMillis(), true, true);
-        updateMonthYearDisplay();
-    }
-
-    private void updateMonthYearDisplay() {
-        String year = String.valueOf(currentCalendar.get(Calendar.YEAR));
-        tvCurrentYear.setText(year);
     }
 
     private void setupCalendarListener() {
@@ -218,7 +255,6 @@ public class MainActivity extends AppCompatActivity {
             currentSelectedDate = calendar.getTimeInMillis();
 
             currentCalendar.set(year, month, dayOfMonth);
-            updateMonthYearDisplay();
 
             showDateInfo(currentSelectedDate);
             btnOpenDayView.setVisibility(android.view.View.VISIBLE);
@@ -231,13 +267,11 @@ public class MainActivity extends AppCompatActivity {
             currentUser = database.getUserDetails(username);
 
             if (currentUser != null) {
-                tvWelcome.setText("Hi, " + currentUser.getFirstName());
                 calendarDecorator = new CalendarDecorator(this, holidayService, currentUser);
                 updateNavigationHeader();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            tvWelcome.setText("Welcome to Calendar!");
         }
     }
 
@@ -328,7 +362,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openDayView(long dateMillis) {
-        Toast.makeText(this, "Opening day view...", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, DayViewActivity.class);
         intent.putExtra("selected_date", dateMillis);
         startActivity(intent);

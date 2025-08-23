@@ -83,7 +83,7 @@ public class DayViewActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
-        btnAddEvent.setOnClickListener(v -> showCreateEventDialog());
+        btnAddEvent.setOnClickListener(v -> showAddTypeDialog());
         eventsContainer.setOnTouchListener(this::handleEventsContainerTouch);
     }
 
@@ -108,7 +108,7 @@ public class DayViewActivity extends AppCompatActivity {
                     int minute = (int) ((y % dpToPx(HOUR_HEIGHT_DP)) / dpToPx(HOUR_HEIGHT_DP) * 60);
                     minute = (minute / 15) * 15;
                     if (hour >= 0 && hour < 24) {
-                        showCreateEventDialogAtTime(hour, minute);
+                        showAddTypeDialogAtTime(hour, minute);
                     }
                 }
                 return true;
@@ -316,6 +316,89 @@ public class DayViewActivity extends AppCompatActivity {
         helper.showCreateEventDialog();
     }
 
+    private void showAddTypeDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_type_selector, null);
+
+        Button btnEvent = dialogView.findViewById(R.id.btn_event);
+        Button btnBirthday = dialogView.findViewById(R.id.btn_birthday);
+        Button btnReminder = dialogView.findViewById(R.id.btn_reminder);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        applyRoundedButtonBackground(btnEvent, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnBirthday, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnReminder, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnCancel, "#d4006d", "#FF69B4", 8);
+
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
+                .setView(dialogView)
+                .create();
+
+        btnEvent.setOnClickListener(v -> {
+            dialog.dismiss();
+            showCreateEventDialog();
+        });
+
+        btnBirthday.setOnClickListener(v -> {
+            dialog.dismiss();
+            Toast.makeText(this, "Birthday feature coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnReminder.setOnClickListener(v -> {
+            dialog.dismiss();
+            Toast.makeText(this, "Reminder feature coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void showAddTypeDialogAtTime(int hour, int minute) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_type_selector, null);
+
+        Button btnEvent = dialogView.findViewById(R.id.btn_event);
+        Button btnBirthday = dialogView.findViewById(R.id.btn_birthday);
+        Button btnReminder = dialogView.findViewById(R.id.btn_reminder);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        applyRoundedButtonBackground(btnEvent, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnBirthday, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnReminder, "#d4006d", "#FF69B4", 8);
+        applyRoundedButtonBackground(btnCancel, "#d4006d", "#FF69B4", 8);
+
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
+                .setView(dialogView)
+                .create();
+
+        btnEvent.setOnClickListener(v -> {
+            dialog.dismiss();
+            showCreateEventDialogAtTime(hour, minute);
+        });
+
+        btnBirthday.setOnClickListener(v -> {
+            dialog.dismiss();
+            Toast.makeText(this, "Birthday feature coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnReminder.setOnClickListener(v -> {
+            dialog.dismiss();
+            Toast.makeText(this, "Reminder feature coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void applyRoundedButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
+        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+        drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        drawable.setColor(android.graphics.Color.parseColor(fillColor));
+        drawable.setStroke(2, android.graphics.Color.parseColor(strokeColor));
+        drawable.setCornerRadius(cornerRadius * getResources().getDisplayMetrics().density);
+        button.setBackground(drawable);
+    }
+
     private void addNewEvent(CalendarEvent event) {
         boolean success = database.createEvent(
             currentUserId,
@@ -329,7 +412,6 @@ public class DayViewActivity extends AppCompatActivity {
         if (success) {
             loadEventsFromDatabase();
             renderEvents();
-            Toast.makeText(this, "Event created: " + event.getTitle(), Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Failed to create event", Toast.LENGTH_SHORT).show();
         }
@@ -354,7 +436,6 @@ public class DayViewActivity extends AppCompatActivity {
                         if (success) {
                             loadEventsFromDatabase();
                             renderEvents();
-                            Toast.makeText(this, "Event updated: " + updatedEvent.getTitle(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "Failed to update event", Toast.LENGTH_SHORT).show();
                         }
@@ -366,7 +447,6 @@ public class DayViewActivity extends AppCompatActivity {
                     if (success) {
                         loadEventsFromDatabase();
                         renderEvents();
-                        Toast.makeText(this, "Event deleted", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(this, "Failed to delete event", Toast.LENGTH_SHORT).show();
                     }
