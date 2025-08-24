@@ -13,39 +13,20 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Names"
+            android:text="Title"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
-        <LinearLayout
-            android:id="@+id/layout_names"
+        <EditText
+            android:id="@+id/et_reminder_title"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp">
-
-            <EditText
-                android:id="@+id/et_name_0"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:hint="Enter person's name"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#888888"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp" />
-
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btn_add_name"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="+ Add Another Name"
+            android:layout_height="48dp"
+            android:hint="Enter reminder title"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:background="@android:color/transparent"
+            android:textColorHint="#888888"
+            android:padding="12dp"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -58,16 +39,25 @@
             android:layout_marginBottom="8dp" />
 
         <EditText
-            android:id="@+id/et_birthday_description"
+            android:id="@+id/et_reminder_description"
             android:layout_width="match_parent"
             android:layout_height="80dp"
-            android:hint="Enter birthday description"
+            android:hint="Enter reminder description"
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:padding="12dp"
             android:gravity="top"
             android:inputType="textMultiLine"
             android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Time"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -77,18 +67,31 @@
             android:layout_marginBottom="16dp">
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Yearly recurrence (every year)"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp" />
-
-            <Switch
-                android:id="@+id/cb_yearly_recurrence"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="true" />
+                android:text="Hour:"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp" />
+
+            <NumberPicker
+                android:id="@+id/np_hour"
+                android:layout_width="wrap_content"
+                android:layout_height="120dp"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Minute:"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp" />
+
+            <NumberPicker
+                android:id="@+id/np_minute"
+                android:layout_width="wrap_content"
+                android:layout_height="120dp" />
 
         </LinearLayout>
 
@@ -103,12 +106,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Enable notifications (2 days, 1 day, and day of birthday)"
+                android:text="Enable notifications (2 days, 1 day, and day of reminder)"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp" />
 
             <Switch
-                android:id="@+id/cb_notifications"
+                android:id="@+id/switch_notifications"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true" />
@@ -131,12 +134,12 @@
                 android:layout_marginEnd="16dp" />
 
             <Button
-                android:id="@+id/btn_create_birthday"
+                android:id="@+id/btn_create_reminder"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="Create Birthday"
+                android:text="Create Reminder"
                 android:textColor="#FFFFFF"
-                android:background="#FF69B4"
+                android:background="#FFA500"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp" />
 

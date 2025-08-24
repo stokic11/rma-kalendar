@@ -34,6 +34,7 @@ public class DayViewActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private List<CalendarEvent> events;
     private List<Birthday> birthdays;
+    private List<Reminder> reminders;
     private long selectedDateMillis;
     private int currentUserId;
     private User currentUser;
@@ -53,6 +54,7 @@ public class DayViewActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("user_session", MODE_PRIVATE);
         events = new ArrayList<>();
         birthdays = new ArrayList<>();
+        reminders = new ArrayList<>();
 
         String username = sharedPreferences.getString("username", "");
         currentUser = database.getUserByUsername(username);
@@ -71,8 +73,10 @@ public class DayViewActivity extends AppCompatActivity {
         checkBirthday(selectedDateMillis);
         loadEventsFromDatabase();
         loadBirthdaysFromDatabase();
+        loadRemindersFromDatabase();
         renderEvents();
         checkCustomBirthdays(selectedDateMillis);
+        // Reminders are now displayed as event cards in the timeline, no strips needed
     }
 
     private void initViews() {
@@ -224,27 +228,43 @@ public class DayViewActivity extends AppCompatActivity {
         birthdays = database.getBirthdaysForDate(currentUserId, selectedDateMillis);
     }
 
+    private void loadRemindersFromDatabase() {
+        reminders = database.getRemindersForDate(currentUserId, selectedDateMillis);
+    }
+
     private void checkCustomBirthdays(long selectedDateMillis) {
         List<Birthday> todaysBirthdays = database.getBirthdaysForDate(currentUserId, selectedDateMillis);
         if (!todaysBirthdays.isEmpty()) {
-            StringBuilder birthdayText = new StringBuilder();
-            for (int i = 0; i < todaysBirthdays.size(); i++) {
-                Birthday birthday = todaysBirthdays.get(i);
-                if (i > 0) birthdayText.append("\n");
-                birthdayText.append("Birthday: ").append(birthday.getNamesText());
+            for (Birthday birthday : todaysBirthdays) {
+                StringBuilder birthdayText = new StringBuilder();
+                birthdayText.append("🎂 Birthday: ").append(birthday.getNamesText());
                 if (!birthday.getDescription().isEmpty()) {
                     birthdayText.append(" - ").append(birthday.getDescription());
                 }
+                birthdayText.append(" (Tap to edit)");
+
+                TextView birthdayInfoView = new TextView(this);
+                birthdayInfoView.setText(birthdayText.toString());
+                birthdayInfoView.setTextColor(getResources().getColor(android.R.color.white));
+                birthdayInfoView.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+                birthdayInfoView.setPadding(16, 8, 16, 8);
+                birthdayInfoView.setVisibility(View.VISIBLE);
+
+                // Make birthday strip clickable with better visual feedback
+                birthdayInfoView.setClickable(true);
+                birthdayInfoView.setFocusable(true);
+                birthdayInfoView.setOnClickListener(v -> showBirthdayDetailsDialog(birthday));
+
+                // Add ripple effect for better clickability indication
+                android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+                drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                drawable.setColor(getResources().getColor(android.R.color.holo_orange_light));
+                drawable.setStroke(2, getResources().getColor(android.R.color.holo_orange_dark));
+                drawable.setCornerRadius(8 * getResources().getDisplayMetrics().density);
+                birthdayInfoView.setBackground(drawable);
+
+                layoutDayInfo.addView(birthdayInfoView);
             }
-
-            TextView birthdayInfoView = new TextView(this);
-            birthdayInfoView.setText(birthdayText.toString());
-            birthdayInfoView.setTextColor(getResources().getColor(android.R.color.white));
-            birthdayInfoView.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
-            birthdayInfoView.setPadding(16, 8, 16, 8);
-            birthdayInfoView.setVisibility(View.VISIBLE);
-
-            layoutDayInfo.addView(birthdayInfoView);
         }
     }
 
@@ -252,6 +272,10 @@ public class DayViewActivity extends AppCompatActivity {
         eventsContainer.removeAllViews();
         for (CalendarEvent event : events) {
             createEventView(event);
+        }
+        // Add reminders as event cards
+        for (Reminder reminder : reminders) {
+            createReminderView(reminder);
         }
     }
 
@@ -323,6 +347,33 @@ public class DayViewActivity extends AppCompatActivity {
         eventsContainer.addView(eventView);
     }
 
+    private void createReminderView(Reminder reminder) {
+        View eventView = LayoutInflater.from(this).inflate(R.layout.event_card, null);
+        TextView tvTitle = eventView.findViewById(R.id.tv_event_title);
+        TextView tvTime = eventView.findViewById(R.id.tv_event_time);
+        TextView tvDescription = eventView.findViewById(R.id.tv_event_description);
+
+        CardView cardView = (CardView) eventView;
+        LinearLayout background = (LinearLayout) cardView.getChildAt(0);
+        background.setBackgroundColor(reminder.getColor());
+
+        tvTitle.setText("📝 " + reminder.getTitle()); // Add reminder icon
+        tvTime.setText(reminder.getTimeString());
+
+        if (reminder.getDescription() != null && !reminder.getDescription().isEmpty()) {
+            tvDescription.setText(reminder.getDescription());
+            tvDescription.setVisibility(View.VISIBLE);
+        } else {
+            tvDescription.setVisibility(View.GONE);
+        }
+
+        int startMinuteOfDay = reminder.getStartMinuteOfDay();
+        setEventPosition(eventView, startMinuteOfDay, reminder.getDurationInMinutes());
+
+        eventView.setOnClickListener(v -> showReminderDetailsDialog(reminder));
+        eventsContainer.addView(eventView);
+    }
+
     private void setEventPosition(View eventView, int startMinuteOfDay, int durationMinutes) {
         int topMargin = (int) dpToPx(startMinuteOfDay);
         int height = Math.max((int) dpToPx(durationMinutes), (int) dpToPx(30));
@@ -377,7 +428,7 @@ public class DayViewActivity extends AppCompatActivity {
 
         btnReminder.setOnClickListener(v -> {
             dialog.dismiss();
-            Toast.makeText(this, "Reminder feature coming soon!", Toast.LENGTH_SHORT).show();
+            showCreateReminderDialog();
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -414,7 +465,7 @@ public class DayViewActivity extends AppCompatActivity {
 
         btnReminder.setOnClickListener(v -> {
             dialog.dismiss();
-            Toast.makeText(this, "Reminder feature coming soon!", Toast.LENGTH_SHORT).show();
+            showCreateReminderDialog();
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -493,7 +544,7 @@ public class DayViewActivity extends AppCompatActivity {
                 Toast.makeText(this, "Birthday created successfully!", Toast.LENGTH_SHORT).show();
                 loadBirthdaysFromDatabase();
                 renderEvents();
-                refreshCustomBirthdayDisplay();
+                refreshCustomDisplay();
 
                 // Trigger immediate notification check for testing
                 BirthdayNotificationService.checkAndSendImmediateNotifications(this);
@@ -523,7 +574,7 @@ public class DayViewActivity extends AppCompatActivity {
                     if (success) {
                         loadBirthdaysFromDatabase();
                         renderEvents();
-                        refreshCustomBirthdayDisplay();
+                        refreshCustomDisplay();
                         Toast.makeText(this, "Birthday deleted successfully!", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(this, "Failed to delete birthday", Toast.LENGTH_SHORT).show();
@@ -539,7 +590,7 @@ public class DayViewActivity extends AppCompatActivity {
                 Toast.makeText(this, "Birthday updated successfully!", Toast.LENGTH_SHORT).show();
                 loadBirthdaysFromDatabase();
                 renderEvents();
-                refreshCustomBirthdayDisplay();
+                refreshCustomDisplay();
             } else {
                 Toast.makeText(this, "Failed to update birthday", Toast.LENGTH_SHORT).show();
             }
@@ -547,7 +598,85 @@ public class DayViewActivity extends AppCompatActivity {
         helper.showCreateBirthdayDialog();
     }
 
-    private void refreshCustomBirthdayDisplay() {
+    private void showCreateReminderDialog() {
+        ReminderCreationHelper helper = new ReminderCreationHelper(this, selectedDateMillis, reminder -> {
+            if (database.saveReminder(reminder, currentUserId)) {
+                Toast.makeText(this, "Reminder created successfully!", Toast.LENGTH_SHORT).show();
+                loadRemindersFromDatabase();
+                renderEvents();
+                refreshCustomDisplay();
+
+                // Schedule precise notifications (1 hour before and at exact time)
+                ReminderNotificationService.scheduleReminderNotifications(this, reminder);
+
+                // Trigger immediate notification check for testing
+                ReminderNotificationService.checkAndSendImmediateNotifications(this);
+            } else {
+                Toast.makeText(this, "Failed to create reminder", Toast.LENGTH_SHORT).show();
+            }
+        });
+        helper.showCreateReminderDialog();
+    }
+
+    private void showReminderDetailsDialog(Reminder reminder) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String message = "Title: " + reminder.getTitle();
+        if (!reminder.getDescription().isEmpty()) {
+            message += "\nDescription: " + reminder.getDescription();
+        }
+        message += "\nTime: " + reminder.getTimeString();
+        message += "\nNotifications: " + (reminder.isNotificationsEnabled() ? "Enabled (1 hour before & exact time)" : "Disabled");
+
+        builder.setTitle("Reminder Details")
+                .setMessage(message)
+                .setPositiveButton("Edit", (dialog, which) -> {
+                    showEditReminderDialog(reminder);
+                })
+                .setNegativeButton("Delete", (dialog, which) -> {
+                    // Cancel existing notifications before deletion
+                    ReminderNotificationService.cancelReminderNotifications(this, reminder);
+
+                    boolean success = database.deleteReminder(reminder.getId(), currentUserId);
+                    if (success) {
+                        loadRemindersFromDatabase();
+                        renderEvents();
+                        refreshCustomDisplay();
+                        Toast.makeText(this, "Reminder deleted successfully!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Failed to delete reminder", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("Close", null)
+                .show();
+    }
+
+    private void showEditReminderDialog(Reminder reminder) {
+        // Cancel existing notifications before editing
+        ReminderNotificationService.cancelReminderNotifications(this, reminder);
+
+        ReminderCreationHelper helper = new ReminderCreationHelper(this, reminder, updatedReminder -> {
+            if (database.updateReminder(reminder.getId(), updatedReminder, currentUserId)) {
+                Toast.makeText(this, "Reminder updated successfully!", Toast.LENGTH_SHORT).show();
+                loadRemindersFromDatabase();
+                renderEvents();
+                refreshCustomDisplay();
+
+                // Schedule new notifications for the updated reminder
+                ReminderNotificationService.scheduleReminderNotifications(this, updatedReminder);
+            } else {
+                Toast.makeText(this, "Failed to update reminder", Toast.LENGTH_SHORT).show();
+                // If update failed, reschedule the original reminder's notifications
+                ReminderNotificationService.scheduleReminderNotifications(this, reminder);
+            }
+        });
+        helper.showCreateReminderDialog();
+    }
+
+    private void checkCustomReminders(long selectedDateMillis) {
+        // Reminders are now displayed as event cards in the timeline, no strips needed
+    }
+
+    private void refreshCustomDisplay() {
         for (int i = layoutDayInfo.getChildCount() - 1; i >= 0; i--) {
             View child = layoutDayInfo.getChildAt(i);
             if (child instanceof TextView && child != tvSelectedDate && child != tvHolidayInfo && child != tvBirthdayInfo) {
@@ -555,6 +684,7 @@ public class DayViewActivity extends AppCompatActivity {
             }
         }
         checkCustomBirthdays(selectedDateMillis);
+        // Reminders are now displayed as event cards in the timeline, no strips needed
     }
 
     private float dpToPx(float dp) {

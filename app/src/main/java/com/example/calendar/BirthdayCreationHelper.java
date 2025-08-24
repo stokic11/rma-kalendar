@@ -6,7 +6,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
+import android.widget.Switch;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -50,8 +50,8 @@ public class BirthdayCreationHelper {
 
         layoutNames = dialogView.findViewById(R.id.layout_names);
         EditText etDescription = dialogView.findViewById(R.id.et_birthday_description);
-        CheckBox cbYearlyRecurrence = dialogView.findViewById(R.id.cb_yearly_recurrence);
-        CheckBox cbNotifications = dialogView.findViewById(R.id.cb_notifications);
+        Switch cbYearlyRecurrence = dialogView.findViewById(R.id.cb_yearly_recurrence);
+        Switch cbNotifications = dialogView.findViewById(R.id.cb_notifications);
         Button btnAddName = dialogView.findViewById(R.id.btn_add_name);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
         Button btnCreateBirthday = dialogView.findViewById(R.id.btn_create_birthday);

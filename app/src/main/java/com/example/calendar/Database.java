@@ -38,8 +38,18 @@ public class Database extends SQLiteOpenHelper {
     private static final String BIRTHDAY_NOTIFICATIONS = "notifications_enabled";
     private static final String BIRTHDAY_COLOR = "color";
 
+    private static final String TABLE_REMINDERS = "reminders";
+    private static final String REMINDER_ID = "reminder_id";
+    private static final String REMINDER_TITLE = "title";
+    private static final String REMINDER_DESCRIPTION = "description";
+    private static final String REMINDER_DATE = "reminder_date";
+    private static final String REMINDER_HOUR = "reminder_hour";
+    private static final String REMINDER_MINUTE = "reminder_minute";
+    private static final String REMINDER_NOTIFICATIONS = "notifications_enabled";
+    private static final String REMINDER_COLOR = "color";
+
     public Database(Context context) {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 4);
     }
 
     @Override
@@ -72,6 +82,18 @@ public class Database extends SQLiteOpenHelper {
                 BIRTHDAY_NOTIFICATIONS + " INTEGER NOT NULL, " +
                 BIRTHDAY_COLOR + " INTEGER NOT NULL, " +
                 "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+
+        db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
+                REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                USER_ID + " INTEGER NOT NULL, " +
+                REMINDER_TITLE + " TEXT NOT NULL, " +
+                REMINDER_DESCRIPTION + " TEXT, " +
+                REMINDER_DATE + " TEXT NOT NULL, " +
+                REMINDER_HOUR + " INTEGER NOT NULL, " +
+                REMINDER_MINUTE + " INTEGER NOT NULL, " +
+                REMINDER_NOTIFICATIONS + " INTEGER NOT NULL, " +
+                REMINDER_COLOR + " INTEGER NOT NULL, " +
+                "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
     }
 
     @Override
@@ -87,6 +109,38 @@ public class Database extends SQLiteOpenHelper {
                     BIRTHDAY_NOTIFICATIONS + " INTEGER NOT NULL, " +
                     BIRTHDAY_COLOR + " INTEGER NOT NULL, " +
                     "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
+                    REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    USER_ID + " INTEGER NOT NULL, " +
+                    REMINDER_TITLE + " TEXT NOT NULL, " +
+                    REMINDER_DESCRIPTION + " TEXT, " +
+                    REMINDER_DATE + " TEXT NOT NULL, " +
+                    REMINDER_NOTIFICATIONS + " INTEGER NOT NULL, " +
+                    REMINDER_COLOR + " INTEGER NOT NULL, " +
+                    "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+        }
+        if (oldVersion < 4) {
+            // Add hour and minute columns to existing reminders table
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_HOUR + " INTEGER DEFAULT 9");
+                db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_MINUTE + " INTEGER DEFAULT 0");
+            } catch (Exception e) {
+                // If ALTER fails, recreate the table
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_REMINDERS);
+                db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
+                        REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        USER_ID + " INTEGER NOT NULL, " +
+                        REMINDER_TITLE + " TEXT NOT NULL, " +
+                        REMINDER_DESCRIPTION + " TEXT, " +
+                        REMINDER_DATE + " TEXT NOT NULL, " +
+                        REMINDER_HOUR + " INTEGER NOT NULL, " +
+                        REMINDER_MINUTE + " INTEGER NOT NULL, " +
+                        REMINDER_NOTIFICATIONS + " INTEGER NOT NULL, " +
+                        REMINDER_COLOR + " INTEGER NOT NULL, " +
+                        "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
+            }
         }
     }
 
@@ -168,6 +222,34 @@ public class Database extends SQLiteOpenHelper {
         birthday.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_ID))));
         birthday.setColor(cursor.getInt(cursor.getColumnIndexOrThrow(BIRTHDAY_COLOR)));
         return birthday;
+    }
+
+    private Reminder createReminderFromCursor(Cursor cursor) {
+        String dateStr = cursor.getString(cursor.getColumnIndexOrThrow(REMINDER_DATE));
+        long dateMillis = dateTimeStringToMillis(dateStr);
+
+        int hour = 9; // default
+        int minute = 0; // default
+
+        // Check if hour and minute columns exist (for backward compatibility)
+        try {
+            hour = cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_HOUR));
+            minute = cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_MINUTE));
+        } catch (Exception e) {
+            // If columns don't exist, use defaults
+        }
+
+        Reminder reminder = new Reminder(
+                cursor.getString(cursor.getColumnIndexOrThrow(REMINDER_TITLE)),
+                cursor.getString(cursor.getColumnIndexOrThrow(REMINDER_DESCRIPTION)),
+                dateMillis,
+                hour,
+                minute,
+                cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_NOTIFICATIONS)) == 1
+        );
+        reminder.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_ID))));
+        reminder.setColor(cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_COLOR)));
+        return reminder;
     }
 
     public boolean createUser(String firstName, String lastName, String birthday, String username, String password) {
@@ -519,6 +601,96 @@ public class Database extends SQLiteOpenHelper {
             values.put(BIRTHDAY_COLOR, updatedBirthday.getColor());
             return db.update(TABLE_BIRTHDAYS, values, BIRTHDAY_ID + " = ? AND " + USER_ID + " = ?",
                     new String[]{birthdayId, String.valueOf(userId)}) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Reminder methods
+    public boolean saveReminder(Reminder reminder, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues values = new ContentValues();
+            values.put(USER_ID, userId);
+            values.put(REMINDER_TITLE, reminder.getTitle());
+            values.put(REMINDER_DESCRIPTION, reminder.getDescription());
+            values.put(REMINDER_DATE, millisToDateTimeString(reminder.getDateMillis()));
+            values.put(REMINDER_HOUR, reminder.getHour());
+            values.put(REMINDER_MINUTE, reminder.getMinute());
+            values.put(REMINDER_NOTIFICATIONS, reminder.isNotificationsEnabled() ? 1 : 0);
+            values.put(REMINDER_COLOR, reminder.getColor());
+            return db.insert(TABLE_REMINDERS, null, values) != -1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public List<Reminder> getRemindersForUser(int userId) {
+        List<Reminder> reminders = new ArrayList<>();
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_REMINDERS + " WHERE " + USER_ID + " = ?",
+                     new String[]{String.valueOf(userId)})) {
+            if (cursor.moveToFirst()) {
+                do {
+                    reminders.add(createReminderFromCursor(cursor));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return reminders;
+    }
+
+    public List<Reminder> getRemindersForDate(int userId, long dateMillis) {
+        List<Reminder> reminders = new ArrayList<>();
+        java.util.Calendar targetCal = java.util.Calendar.getInstance();
+        targetCal.setTimeInMillis(dateMillis);
+        int targetMonth = targetCal.get(java.util.Calendar.MONTH);
+        int targetDay = targetCal.get(java.util.Calendar.DAY_OF_MONTH);
+        int targetYear = targetCal.get(java.util.Calendar.YEAR);
+
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_REMINDERS + " WHERE " + USER_ID + " = ?",
+                     new String[]{String.valueOf(userId)})) {
+            if (cursor.moveToFirst()) {
+                do {
+                    Reminder reminder = createReminderFromCursor(cursor);
+                    java.util.Calendar reminderCal = java.util.Calendar.getInstance();
+                    reminderCal.setTimeInMillis(reminder.getDateMillis());
+
+                    if (reminderCal.get(java.util.Calendar.YEAR) == targetYear &&
+                        reminderCal.get(java.util.Calendar.MONTH) == targetMonth &&
+                        reminderCal.get(java.util.Calendar.DAY_OF_MONTH) == targetDay) {
+                        reminders.add(reminder);
+                    }
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return reminders;
+    }
+
+    public boolean deleteReminder(String reminderId, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            return db.delete(TABLE_REMINDERS, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
+                    new String[]{reminderId, String.valueOf(userId)}) > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean updateReminder(String reminderId, Reminder updatedReminder, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues values = new ContentValues();
+            values.put(REMINDER_TITLE, updatedReminder.getTitle());
+            values.put(REMINDER_DESCRIPTION, updatedReminder.getDescription());
+            values.put(REMINDER_DATE, millisToDateTimeString(updatedReminder.getDateMillis()));
+            values.put(REMINDER_HOUR, updatedReminder.getHour());
+            values.put(REMINDER_MINUTE, updatedReminder.getMinute());
+            values.put(REMINDER_NOTIFICATIONS, updatedReminder.isNotificationsEnabled() ? 1 : 0);
+            values.put(REMINDER_COLOR, updatedReminder.getColor());
+            return db.update(TABLE_REMINDERS, values, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
+                    new String[]{reminderId, String.valueOf(userId)}) > 0;
         } catch (Exception e) {
             return false;
         }

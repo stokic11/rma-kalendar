@@ -7,7 +7,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
+import android.widget.Switch;
 import android.widget.EditText;
 import android.widget.TextView;
 import java.text.SimpleDateFormat;
@@ -108,7 +108,7 @@ public class EventCreationHelper {
         EditText etTitle = dialogView.findViewById(R.id.et_event_title);
         EditText etDescription = dialogView.findViewById(R.id.et_event_description);
         Button btnStartTime = dialogView.findViewById(R.id.btn_start_time);
-        CheckBox cbMultiDay = dialogView.findViewById(R.id.cb_multi_day);
+        Switch cbMultiDay = dialogView.findViewById(R.id.cb_multi_day);
         Button btnEndTime = dialogView.findViewById(R.id.btn_end_time);
         Button btnEndDate = dialogView.findViewById(R.id.btn_end_date);
         TextView tvDuration = dialogView.findViewById(R.id.tv_duration);

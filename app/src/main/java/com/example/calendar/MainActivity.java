@@ -347,6 +347,8 @@ public class MainActivity extends AppCompatActivity {
         boolean isUserBirthdayDate = isBirthday(dateMillis);
         List<Birthday> customBirthdays = database.getBirthdaysForDate(currentUser.getId(), dateMillis);
         boolean hasCustomBirthdays = !customBirthdays.isEmpty();
+        List<Reminder> customReminders = database.getRemindersForDate(currentUser.getId(), dateMillis);
+        boolean hasCustomReminders = !customReminders.isEmpty();
 
         if (isUserBirthdayDate) {
             infoText.append(" - Happy Birthday, ").append(currentUser.getFirstName()).append("!");
@@ -357,6 +359,15 @@ public class MainActivity extends AppCompatActivity {
                 infoText.append(" - Birthday: ").append(birthday.getNamesText());
                 if (!birthday.getDescription().isEmpty()) {
                     infoText.append(" (").append(birthday.getDescription()).append(")");
+                }
+            }
+        }
+
+        if (hasCustomReminders) {
+            for (Reminder reminder : customReminders) {
+                infoText.append(" - Reminder: ").append(reminder.getTitle());
+                if (!reminder.getDescription().isEmpty()) {
+                    infoText.append(" (").append(reminder.getDescription()).append(")");
                 }
             }
         }
