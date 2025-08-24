@@ -28,6 +28,7 @@ public class Database extends SQLiteOpenHelper {
     private static final String EVENT_START_TIME = "start_time";
     private static final String EVENT_END_TIME = "end_time";
     private static final String EVENT_COLOR = "color";
+    private static final String EVENT_NOTIFICATIONS = "notifications_enabled";
 
     private static final String TABLE_BIRTHDAYS = "birthdays";
     private static final String BIRTHDAY_ID = "birthday_id";
@@ -48,8 +49,11 @@ public class Database extends SQLiteOpenHelper {
     private static final String REMINDER_NOTIFICATIONS = "notifications_enabled";
     private static final String REMINDER_COLOR = "color";
 
+    private Context context;
+
     public Database(Context context) {
-        super(context, DATABASE_NAME, null, 4);
+        super(context, DATABASE_NAME, null, 1);
+        this.context = context;
     }
 
     @Override
@@ -70,6 +74,7 @@ public class Database extends SQLiteOpenHelper {
                 EVENT_START_TIME + " TEXT NOT NULL, " +
                 EVENT_END_TIME + " TEXT NOT NULL, " +
                 EVENT_COLOR + " INTEGER NOT NULL, " +
+                EVENT_NOTIFICATIONS + " INTEGER NOT NULL, " +
                 "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
 
         db.execSQL("CREATE TABLE " + TABLE_BIRTHDAYS + " (" +
@@ -98,48 +103,11 @@ public class Database extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 2) {
-            db.execSQL("CREATE TABLE " + TABLE_BIRTHDAYS + " (" +
-                    BIRTHDAY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    USER_ID + " INTEGER NOT NULL, " +
-                    BIRTHDAY_NAMES + " TEXT NOT NULL, " +
-                    BIRTHDAY_DESCRIPTION + " TEXT, " +
-                    BIRTHDAY_DATE + " TEXT NOT NULL, " +
-                    BIRTHDAY_YEARLY + " INTEGER NOT NULL, " +
-                    BIRTHDAY_NOTIFICATIONS + " INTEGER NOT NULL, " +
-                    BIRTHDAY_COLOR + " INTEGER NOT NULL, " +
-                    "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
-        }
-        if (oldVersion < 3) {
-            db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
-                    REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    USER_ID + " INTEGER NOT NULL, " +
-                    REMINDER_TITLE + " TEXT NOT NULL, " +
-                    REMINDER_DESCRIPTION + " TEXT, " +
-                    REMINDER_DATE + " TEXT NOT NULL, " +
-                    REMINDER_NOTIFICATIONS + " INTEGER NOT NULL, " +
-                    REMINDER_COLOR + " INTEGER NOT NULL, " +
-                    "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
-        }
-        if (oldVersion < 4) {
-            try {
-                db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_HOUR + " INTEGER DEFAULT 9");
-                db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_MINUTE + " INTEGER DEFAULT 0");
-            } catch (Exception e) {
-                db.execSQL("DROP TABLE IF EXISTS " + TABLE_REMINDERS);
-                db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
-                        REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        USER_ID + " INTEGER NOT NULL, " +
-                        REMINDER_TITLE + " TEXT NOT NULL, " +
-                        REMINDER_DESCRIPTION + " TEXT, " +
-                        REMINDER_DATE + " TEXT NOT NULL, " +
-                        REMINDER_HOUR + " INTEGER NOT NULL, " +
-                        REMINDER_MINUTE + " INTEGER NOT NULL, " +
-                        REMINDER_NOTIFICATIONS + " INTEGER NOT NULL, " +
-                        REMINDER_COLOR + " INTEGER NOT NULL, " +
-                        "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
-            }
-        }
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REMINDERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_BIRTHDAYS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EVENTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        onCreate(db);
     }
 
     private String hashPassword(String password) {
@@ -164,9 +132,13 @@ public class Database extends SQLiteOpenHelper {
     }
 
     private long dateTimeStringToMillis(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return 0;
+        }
         try {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
-            return sdf.parse(dateTimeString).getTime();
+            java.util.Date date = sdf.parse(dateTimeString);
+            return date != null ? date.getTime() : 0;
         } catch (Exception e) {
             return 0;
         }
@@ -188,13 +160,22 @@ public class Database extends SQLiteOpenHelper {
         long startTime = dateTimeStringToMillis(startTimeStr);
         long endTime = dateTimeStringToMillis(endTimeStr);
 
-        return new CalendarEvent(
+        CalendarEvent event = new CalendarEvent(
                 cursor.getString(cursor.getColumnIndexOrThrow(EVENT_TITLE)),
                 cursor.getString(cursor.getColumnIndexOrThrow(EVENT_DESCRIPTION)),
                 startTime,
                 endTime,
                 cursor.getInt(cursor.getColumnIndexOrThrow(EVENT_COLOR))
         );
+
+        try {
+            event.setNotificationsEnabled(cursor.getInt(cursor.getColumnIndexOrThrow(EVENT_NOTIFICATIONS)) == 1);
+        } catch (Exception e) {
+            event.setNotificationsEnabled(true);
+        }
+
+        event.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(EVENT_ID))));
+        return event;
     }
 
     private Birthday createBirthdayFromCursor(Cursor cursor) {
@@ -429,7 +410,59 @@ public class Database extends SQLiteOpenHelper {
             values.put(EVENT_START_TIME, millisToDateTimeString(startTime));
             values.put(EVENT_END_TIME, millisToDateTimeString(endTime));
             values.put(EVENT_COLOR, color);
+            values.put(EVENT_NOTIFICATIONS, 1);
             return db.insert(TABLE_EVENTS, null, values) != -1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean saveEvent(CalendarEvent event, int userId) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues values = new ContentValues();
+            values.put(USER_ID, userId);
+            values.put(EVENT_TITLE, event.getTitle());
+            values.put(EVENT_DESCRIPTION, event.getDescription());
+            values.put(EVENT_START_TIME, millisToDateTimeString(event.getStartTimeMillis()));
+            values.put(EVENT_END_TIME, millisToDateTimeString(event.getEndTimeMillis()));
+            values.put(EVENT_COLOR, event.getColor());
+            values.put(EVENT_NOTIFICATIONS, event.isNotificationsEnabled() ? 1 : 0);
+            long result = db.insert(TABLE_EVENTS, null, values);
+            if (result != -1) {
+                event.setId(String.valueOf(result));
+                if (event.isNotificationsEnabled()) {
+                    EventNotificationService.scheduleEventNotifications(context, event);
+                }
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean updateEvent(int userId, CalendarEvent oldEvent, CalendarEvent newEvent) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            EventNotificationService.cancelEventNotifications(context, oldEvent);
+
+            ContentValues values = new ContentValues();
+            values.put(EVENT_TITLE, newEvent.getTitle());
+            values.put(EVENT_DESCRIPTION, newEvent.getDescription());
+            values.put(EVENT_START_TIME, millisToDateTimeString(newEvent.getStartTimeMillis()));
+            values.put(EVENT_END_TIME, millisToDateTimeString(newEvent.getEndTimeMillis()));
+            values.put(EVENT_COLOR, newEvent.getColor());
+            values.put(EVENT_NOTIFICATIONS, newEvent.isNotificationsEnabled() ? 1 : 0);
+
+            boolean success = db.update(TABLE_EVENTS, values, EVENT_ID + " = ?",
+                    new String[]{oldEvent.getId()}) > 0;
+
+            if (success) {
+                newEvent.setId(oldEvent.getId());
+                if (newEvent.isNotificationsEnabled()) {
+                    EventNotificationService.scheduleEventNotifications(context, newEvent);
+                }
+            }
+            return success;
         } catch (Exception e) {
             return false;
         }
@@ -447,6 +480,29 @@ public class Database extends SQLiteOpenHelper {
             }
         } catch (Exception ignored) {}
         return eventList;
+    }
+
+    public List<CalendarEvent> getAllEvents() {
+        List<CalendarEvent> eventList = new ArrayList<>();
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_EVENTS + " ORDER BY " + EVENT_START_TIME, null)) {
+            if (cursor.moveToFirst()) {
+                do {
+                    eventList.add(createEventFromCursor(cursor));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception ignored) {}
+        return eventList;
+    }
+
+    public CalendarEvent getEventById(int eventId) {
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_EVENTS + " WHERE " + EVENT_ID + " = ?",
+                     new String[]{String.valueOf(eventId)})) {
+            return cursor.moveToFirst() ? createEventFromCursor(cursor) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public List<CalendarEvent> getEventsForUserByDate(int userId, long dateStart, long dateEnd) {
@@ -474,6 +530,8 @@ public class Database extends SQLiteOpenHelper {
 
     public boolean deleteEvent(int userId, CalendarEvent event) {
         try (SQLiteDatabase db = this.getWritableDatabase()) {
+            EventNotificationService.cancelEventNotifications(context, event);
+
             String startTimeStr = millisToDateTimeString(event.getStartTimeMillis());
             String endTimeStr = millisToDateTimeString(event.getEndTimeMillis());
 
@@ -611,7 +669,15 @@ public class Database extends SQLiteOpenHelper {
             values.put(REMINDER_MINUTE, reminder.getMinute());
             values.put(REMINDER_NOTIFICATIONS, reminder.isNotificationsEnabled() ? 1 : 0);
             values.put(REMINDER_COLOR, reminder.getColor());
-            return db.insert(TABLE_REMINDERS, null, values) != -1;
+            long result = db.insert(TABLE_REMINDERS, null, values);
+            if (result != -1) {
+                reminder.setId(String.valueOf(result));
+                if (reminder.isNotificationsEnabled()) {
+                    ReminderNotificationService.scheduleReminderNotifications(context, reminder);
+                }
+                return true;
+            }
+            return false;
         } catch (Exception e) {
             return false;
         }
@@ -662,16 +728,44 @@ public class Database extends SQLiteOpenHelper {
     }
 
     public boolean deleteReminder(String reminderId, int userId) {
+        List<Reminder> userReminders = getRemindersForUser(userId);
+        Reminder reminderToDelete = null;
+        for (Reminder reminder : userReminders) {
+            if (reminder.getId().equals(reminderId)) {
+                reminderToDelete = reminder;
+                break;
+            }
+        }
+
         try (SQLiteDatabase db = this.getWritableDatabase()) {
-            return db.delete(TABLE_REMINDERS, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
+            boolean success = db.delete(TABLE_REMINDERS, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
                     new String[]{reminderId, String.valueOf(userId)}) > 0;
+
+            if (success && reminderToDelete != null) {
+                ReminderNotificationService.cancelReminderNotifications(context, reminderToDelete);
+            }
+
+            return success;
         } catch (Exception e) {
             return false;
         }
     }
 
     public boolean updateReminder(String reminderId, Reminder updatedReminder, int userId) {
+        List<Reminder> userReminders = getRemindersForUser(userId);
+        Reminder oldReminder = null;
+        for (Reminder reminder : userReminders) {
+            if (reminder.getId().equals(reminderId)) {
+                oldReminder = reminder;
+                break;
+            }
+        }
+
         try (SQLiteDatabase db = this.getWritableDatabase()) {
+            if (oldReminder != null) {
+                ReminderNotificationService.cancelReminderNotifications(context, oldReminder);
+            }
+
             ContentValues values = new ContentValues();
             values.put(REMINDER_TITLE, updatedReminder.getTitle());
             values.put(REMINDER_DESCRIPTION, updatedReminder.getDescription());
@@ -680,8 +774,18 @@ public class Database extends SQLiteOpenHelper {
             values.put(REMINDER_MINUTE, updatedReminder.getMinute());
             values.put(REMINDER_NOTIFICATIONS, updatedReminder.isNotificationsEnabled() ? 1 : 0);
             values.put(REMINDER_COLOR, updatedReminder.getColor());
-            return db.update(TABLE_REMINDERS, values, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
+
+            boolean success = db.update(TABLE_REMINDERS, values, REMINDER_ID + " = ? AND " + USER_ID + " = ?",
                     new String[]{reminderId, String.valueOf(userId)}) > 0;
+
+            if (success) {
+                updatedReminder.setId(reminderId);
+                if (updatedReminder.isNotificationsEnabled()) {
+                    ReminderNotificationService.scheduleReminderNotifications(context, updatedReminder);
+                }
+            }
+
+            return success;
         } catch (Exception e) {
             return false;
         }

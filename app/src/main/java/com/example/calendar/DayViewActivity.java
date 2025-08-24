@@ -401,11 +401,6 @@ public class DayViewActivity extends AppCompatActivity {
         Button btnReminder = dialogView.findViewById(R.id.btn_reminder);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
 
-        applyRoundedButtonBackground(btnEvent, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnBirthday, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnReminder, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnCancel, "#d4006d", "#FF69B4", 8);
-
         AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
                 .setView(dialogView)
                 .create();
@@ -438,11 +433,6 @@ public class DayViewActivity extends AppCompatActivity {
         Button btnReminder = dialogView.findViewById(R.id.btn_reminder);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
 
-        applyRoundedButtonBackground(btnEvent, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnBirthday, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnReminder, "#d4006d", "#FF69B4", 8);
-        applyRoundedButtonBackground(btnCancel, "#d4006d", "#FF69B4", 8);
-
         AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
                 .setView(dialogView)
                 .create();
@@ -467,28 +457,27 @@ public class DayViewActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void applyRoundedButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
-        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
-        drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-        drawable.setColor(android.graphics.Color.parseColor(fillColor));
-        drawable.setStroke(2, android.graphics.Color.parseColor(strokeColor));
-        drawable.setCornerRadius(cornerRadius * getResources().getDisplayMetrics().density);
-        button.setBackground(drawable);
-    }
-
     private void addNewEvent(CalendarEvent event) {
-        boolean success = database.createEvent(
-            currentUserId,
-            event.getTitle(),
-            event.getDescription(),
-            event.getStartTimeMillis(),
-            event.getEndTimeMillis(),
-            event.getColor()
-        );
-
-        if (success) {
+        if (database.saveEvent(event, currentUserId)) {
             loadEventsFromDatabase();
             renderEvents();
+
+            List<CalendarEvent> savedEvents = database.getEventsForUser(currentUserId);
+            CalendarEvent savedEvent = null;
+            for (CalendarEvent e : savedEvents) {
+                if (e.getTitle().equals(event.getTitle()) &&
+                    e.getStartTimeMillis() == event.getStartTimeMillis() &&
+                    e.getEndTimeMillis() == event.getEndTimeMillis()) {
+                    savedEvent = e;
+                    break;
+                }
+            }
+
+            if (savedEvent != null) {
+                EventNotificationService.scheduleEventNotifications(this, savedEvent);
+            }
+
+            EventNotificationService.checkAndSendImmediateNotifications(this);
         } else {
             Toast.makeText(this, "Failed to create event", Toast.LENGTH_SHORT).show();
         }
@@ -500,35 +489,33 @@ public class DayViewActivity extends AppCompatActivity {
                 .setMessage("Event: " + event.getTimeRange() + "\n" + event.getDescription())
                 .setPositiveButton("Edit", (dialog, which) -> {
                     EventCreationHelper editHelper = new EventCreationHelper(this, event, updatedEvent -> {
-                        boolean success = database.updateEvent(
-                            currentUserId,
-                            event,
-                            updatedEvent.getTitle(),
-                            updatedEvent.getDescription(),
-                            updatedEvent.getStartTimeMillis(),
-                            updatedEvent.getEndTimeMillis(),
-                            updatedEvent.getColor()
-                        );
+                        EventNotificationService.cancelEventNotifications(this, event);
 
-                        if (success) {
+                        if (database.updateEvent(currentUserId, event, updatedEvent)) {
                             loadEventsFromDatabase();
                             renderEvents();
+
+                            EventNotificationService.scheduleEventNotifications(this, updatedEvent);
                         } else {
                             Toast.makeText(this, "Failed to update event", Toast.LENGTH_SHORT).show();
+                            EventNotificationService.scheduleEventNotifications(this, event);
                         }
                     });
                     editHelper.showCreateEventDialog();
                 })
                 .setNegativeButton("Delete", (dialog, which) -> {
+                    EventNotificationService.cancelEventNotifications(this, event);
+
                     boolean success = database.deleteEvent(currentUserId, event);
                     if (success) {
                         loadEventsFromDatabase();
                         renderEvents();
+                        Toast.makeText(this, "Event deleted successfully!", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(this, "Failed to delete event", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNeutralButton("Cancel", null)
+                .setNeutralButton("Close", null)
                 .show();
     }
 
@@ -657,9 +644,6 @@ public class DayViewActivity extends AppCompatActivity {
             }
         });
         helper.showCreateReminderDialog();
-    }
-
-    private void checkCustomReminders(long selectedDateMillis) {
     }
 
     private void refreshCustomDisplay() {

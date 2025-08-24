@@ -2,7 +2,6 @@ package com.example.calendar;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;

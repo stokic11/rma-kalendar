@@ -80,7 +80,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
                     android:text="Edit"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#d4006d"
+                    style="?android:attr/borderlessButtonStyle"
                     android:paddingHorizontal="16dp" />
 
             </LinearLayout>
@@ -117,7 +118,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
                     android:text="Edit"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#d4006d"
+                    style="?android:attr/borderlessButtonStyle"
                     android:paddingHorizontal="16dp" />
 
             </LinearLayout>
@@ -154,7 +156,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
                     android:text="Edit"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#d4006d"
+                    style="?android:attr/borderlessButtonStyle"
                     android:paddingHorizontal="16dp" />
 
             </LinearLayout>
@@ -184,7 +187,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="Change Password"
-                android:textColor="#FFFFFF"
+                android:textColor="#d4006d"
+                style="?android:attr/borderlessButtonStyle"
                 android:textSize="16sp"
                 android:layout_marginBottom="16dp" />
 

@@ -2,7 +2,6 @@ package com.example.calendar;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,23 +57,9 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void applyStyling() {
-        applyButtonBackground(btnEditFirstName, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnEditLastName, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnEditBirthday, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnChangePassword, "#d4006d", "#FF69B4", 8);
-
         applyInputLineBackground(etFirstName);
         applyInputLineBackground(etLastName);
         applyInputLineBackground(etBirthday);
-    }
-
-    private void applyButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setShape(GradientDrawable.RECTANGLE);
-        drawable.setColor(android.graphics.Color.parseColor(fillColor));
-        drawable.setStroke(2, android.graphics.Color.parseColor(strokeColor));
-        drawable.setCornerRadius(cornerRadius * getResources().getDisplayMetrics().density);
-        button.setBackground(drawable);
     }
 
     private void applyInputLineBackground(EditText editText) {
@@ -183,7 +167,6 @@ public class ProfileActivity extends AppCompatActivity {
                 dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor(android.graphics.Color.parseColor("#666666"));
             }
         } catch (Exception e) {
-            e.printStackTrace();
             dialog.show();
         }
     }
@@ -275,7 +258,6 @@ public class ProfileActivity extends AppCompatActivity {
                 dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor(android.graphics.Color.parseColor("#666666"));
             }
         } catch (Exception e) {
-            e.printStackTrace();
             dialog.show();
         }
     }

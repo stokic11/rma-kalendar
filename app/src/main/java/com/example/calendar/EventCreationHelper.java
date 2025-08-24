@@ -112,6 +112,7 @@ public class EventCreationHelper {
         Button btnEndTime = dialogView.findViewById(R.id.btn_end_time);
         Button btnEndDate = dialogView.findViewById(R.id.btn_end_date);
         TextView tvDuration = dialogView.findViewById(R.id.tv_duration);
+        Switch switchNotifications = dialogView.findViewById(R.id.switch_notifications);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
         Button btnCreateEvent = dialogView.findViewById(R.id.btn_create_event);
 
@@ -191,6 +192,8 @@ public class EventCreationHelper {
             CalendarEvent event = new CalendarEvent(title, description,
                 startTime.getTimeInMillis(), finalEndTime.getTimeInMillis(), selectedColor);
 
+            event.setNotificationsEnabled(switchNotifications.isChecked());
+
             callback.onEventCreated(event);
             dialog.dismiss();
         });
@@ -203,6 +206,7 @@ public class EventCreationHelper {
             isMultiDay = !sameDay(startTime, endTime);
             cbMultiDay.setChecked(isMultiDay);
             endDate.setTimeInMillis(isMultiDay ? endTime.getTimeInMillis() : startTime.getTimeInMillis());
+            switchNotifications.setChecked(editingEvent.isNotificationsEnabled());
             selectColor(editingEvent.getColor(), colorBlue, colorGreen, colorRed, colorOrange, colorPurple);
             updateTimeDisplays(btnStartTime, btnEndTime, btnEndDate, tvDuration);
         }

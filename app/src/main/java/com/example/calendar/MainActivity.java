@@ -3,7 +3,6 @@ package com.example.calendar;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -74,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                 isGranted -> {
                     if (isGranted) {
                         Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
-                        BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+                        initializeNotifications();
                     } else {
                         Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
                     }
@@ -95,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
             initViews();
             setupDrawer();
             setupBackPressedCallback();
-            applyButtonStyling();
             loadUserData();
             loadUserBirthdays();
             setupCalendarListener();
@@ -120,44 +118,36 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!BirthdayNotificationService.hasNotificationPermission(this)) {
+            if (!EventNotificationService.hasNotificationPermission(this)) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
             } else {
-                BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+                initializeNotifications();
             }
         } else {
-            BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+            initializeNotifications();
         }
     }
 
-    private void applyButtonStyling() {
-        applyButtonBackground(btnToday, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnOpenDayView, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnMonthPicker, "#d4006d", "#FF69B4", 8);
-        applyButtonBackground(btnYearPicker, "#d4006d", "#FF69B4", 8);
-    }
+    private void initializeNotifications() {
+        BirthdayNotificationService.checkAndSendImmediateNotifications(this);
+        EventNotificationService.checkAndSendImmediateNotifications(this);
+        ReminderNotificationService.checkAndSendImmediateNotifications(this);
 
-    private void applyButtonBackground(Button button, String fillColor, String strokeColor, int cornerRadius) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setShape(GradientDrawable.RECTANGLE);
-        drawable.setColor(android.graphics.Color.parseColor(fillColor));
-        drawable.setStroke(2, android.graphics.Color.parseColor(strokeColor));
-        drawable.setCornerRadius(cornerRadius * getResources().getDisplayMetrics().density);
-        button.setBackground(drawable);
-    }
-
-    private void setupBackPressedCallback() {
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    drawerLayout.closeDrawer(GravityCompat.START);
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
+        if (currentUser != null) {
+            List<CalendarEvent> userEvents = database.getEventsForUser(currentUser.getId());
+            for (CalendarEvent event : userEvents) {
+                if (event.isNotificationsEnabled()) {
+                    EventNotificationService.scheduleEventNotifications(this, event);
                 }
             }
-        });
+
+            List<Reminder> userReminders = database.getRemindersForUser(currentUser.getId());
+            for (Reminder reminder : userReminders) {
+                if (reminder.isNotificationsEnabled()) {
+                    ReminderNotificationService.scheduleReminderNotifications(this, reminder);
+                }
+            }
+        }
     }
 
     private void initViews() {
@@ -205,6 +195,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         updateNavigationHeader();
+    }
+
+    private void setupBackPressedCallback() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
     }
 
     private void updateNavigationHeader() {
@@ -336,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
 
         StringBuilder infoText = new StringBuilder(dateStr);
 
-        boolean isUserBirthdayDate = isBirthday(dateMillis);
+        boolean isUserBirthdayDate = calendarDecorator != null && calendarDecorator.isBirthday(dateMillis);
         List<Birthday> customBirthdays = database.getBirthdaysForDate(currentUser.getId(), dateMillis);
         boolean hasCustomBirthdays = !customBirthdays.isEmpty();
         List<Reminder> customReminders = database.getRemindersForDate(currentUser.getId(), dateMillis);
@@ -375,28 +379,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         tvInstruction.setText(infoText.toString());
-    }
-
-    private boolean isBirthday(long dateMillis) {
-        if (currentUser == null || currentUser.getBirthday() == null) {
-            return false;
-        }
-
-        try {
-            SimpleDateFormat birthdayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-            Date birthday = birthdayFormat.parse(currentUser.getBirthday());
-
-            Calendar birthdayCalendar = Calendar.getInstance();
-            birthdayCalendar.setTime(birthday);
-
-            Calendar selectedCalendar = Calendar.getInstance();
-            selectedCalendar.setTimeInMillis(dateMillis);
-
-            return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
-                    birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private void checkHoliday(long dateMillis) {

@@ -14,6 +14,7 @@ public class CalendarEvent {
     private long endTime;
     private int color;
     private boolean isAllDay;
+    private boolean notificationsEnabled;
 
     public CalendarEvent(String title, String description, long startTime, long endTime, int color) {
         this.id = String.valueOf(System.currentTimeMillis());
@@ -23,6 +24,7 @@ public class CalendarEvent {
         this.endTime = endTime;
         this.color = color != 0 ? color : generateRandomColor();
         this.isAllDay = false;
+        this.notificationsEnabled = true;
     }
 
     public String getId() { return id; }
@@ -41,6 +43,8 @@ public class CalendarEvent {
     public void setColor(int color) { this.color = color; }
     public boolean isAllDay() { return isAllDay; }
     public void setAllDay(boolean allDay) { isAllDay = allDay; }
+    public boolean isNotificationsEnabled() { return notificationsEnabled; }
+    public void setNotificationsEnabled(boolean notificationsEnabled) { this.notificationsEnabled = notificationsEnabled; }
 
     public int getDurationInMinutes() {
         return (int) ((endTime - startTime) / (1000 * 60));

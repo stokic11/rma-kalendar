@@ -11,7 +11,7 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000000"
+        android:background="#1A1A1A"
         android:padding="16dp">
 
         <LinearLayout
@@ -32,7 +32,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Menu"
                 android:src="@android:drawable/ic_menu_sort_by_size"
-                android:tint="#FFFFFF" />
+                android:tint="#d4006d" />
 
             <TextView
                 android:id="@+id/tv_welcome"
@@ -65,8 +65,9 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
+                style="?android:attr/borderlessButtonStyle"
                 android:text="Month"
-                android:textColor="#FFFFFF"
+                android:textColor="#d4006d"
                 android:textSize="14sp" />
 
             <Button
@@ -75,8 +76,9 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
+                style="?android:attr/borderlessButtonStyle"
                 android:text="Year"
-                android:textColor="#FFFFFF"
+                android:textColor="#d4006d"
                 android:textSize="14sp" />
 
             <Button
@@ -85,8 +87,9 @@
                 android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:paddingHorizontal="16dp"
+                style="?android:attr/borderlessButtonStyle"
                 android:text="Reset"
-                android:textColor="#FFFFFF"
+                android:textColor="#d4006d"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -122,8 +125,9 @@
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_marginBottom="8dp"
+            style="?android:attr/borderlessButtonStyle"
             android:text="OPEN DAY VIEW"
-            android:textColor="#FFFFFF"
+            android:textColor="#d4006d"
             android:textSize="16sp"
             android:textStyle="bold"
             android:visibility="gone"

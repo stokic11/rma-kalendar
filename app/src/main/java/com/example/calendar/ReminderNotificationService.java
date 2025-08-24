@@ -22,6 +22,8 @@ public class ReminderNotificationService extends BroadcastReceiver {
 
     private static final String EXTRA_REMINDER_ID = "reminder_id";
     private static final String EXTRA_NOTIFICATION_TYPE = "notification_type";
+    private static final String TYPE_TWO_DAYS_BEFORE = "two_days_before";
+    private static final String TYPE_ONE_DAY_BEFORE = "one_day_before";
     private static final String TYPE_ONE_HOUR_BEFORE = "one_hour_before";
     private static final String TYPE_EXACT_TIME = "exact_time";
 
@@ -34,8 +36,26 @@ public class ReminderNotificationService extends BroadcastReceiver {
 
         if (reminderId != null && notificationType != null) {
             handleScheduledNotification(context, reminderId, notificationType);
+        } else if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            rescheduleAllNotifications(context);
         } else {
             checkRemindersAndNotify(context);
+        }
+    }
+
+    private void rescheduleAllNotifications(Context context) {
+        Database database = new Database(context);
+        android.content.SharedPreferences prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE);
+        String username = prefs.getString("username", "");
+
+        if (username.isEmpty()) return;
+
+        User currentUser = database.getUserByUsername(username);
+        if (currentUser == null) return;
+
+        List<Reminder> allReminders = database.getRemindersForUser(currentUser.getId());
+        for (Reminder reminder : allReminders) {
+            scheduleReminderNotifications(context, reminder);
         }
     }
 
@@ -85,9 +105,24 @@ public class ReminderNotificationService extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            return;
+        }
+
         long reminderTimeMillis = reminder.getFullDateTimeMillis();
-        long oneHourBeforeMillis = reminderTimeMillis - (60 * 60 * 1000);
         long currentTimeMillis = System.currentTimeMillis();
+
+        long twoDaysBeforeMillis = reminderTimeMillis - (2 * 24 * 60 * 60 * 1000);
+        long oneDayBeforeMillis = reminderTimeMillis - (24 * 60 * 60 * 1000);
+        long oneHourBeforeMillis = reminderTimeMillis - (60 * 60 * 1000);
+
+        if (twoDaysBeforeMillis > currentTimeMillis && reminder.isNotificationsEnabled()) {
+            scheduleNotification(context, reminder, twoDaysBeforeMillis, TYPE_TWO_DAYS_BEFORE);
+        }
+
+        if (oneDayBeforeMillis > currentTimeMillis && reminder.isNotificationsEnabled()) {
+            scheduleNotification(context, reminder, oneDayBeforeMillis, TYPE_ONE_DAY_BEFORE);
+        }
 
         if (oneHourBeforeMillis > currentTimeMillis) {
             scheduleNotification(context, reminder, oneHourBeforeMillis, TYPE_ONE_HOUR_BEFORE);
@@ -102,27 +137,20 @@ public class ReminderNotificationService extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
 
-        Intent intent1Hour = new Intent(context, ReminderNotificationService.class);
-        intent1Hour.putExtra(EXTRA_REMINDER_ID, reminder.getId());
-        intent1Hour.putExtra(EXTRA_NOTIFICATION_TYPE, TYPE_ONE_HOUR_BEFORE);
-        PendingIntent pendingIntent1Hour = PendingIntent.getBroadcast(
-            context,
-            (reminder.getId() + TYPE_ONE_HOUR_BEFORE).hashCode(),
-            intent1Hour,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-        alarmManager.cancel(pendingIntent1Hour);
+        String[] notificationTypes = {TYPE_TWO_DAYS_BEFORE, TYPE_ONE_DAY_BEFORE, TYPE_ONE_HOUR_BEFORE, TYPE_EXACT_TIME};
 
-        Intent intentExact = new Intent(context, ReminderNotificationService.class);
-        intentExact.putExtra(EXTRA_REMINDER_ID, reminder.getId());
-        intentExact.putExtra(EXTRA_NOTIFICATION_TYPE, TYPE_EXACT_TIME);
-        PendingIntent pendingIntentExact = PendingIntent.getBroadcast(
-            context,
-            (reminder.getId() + TYPE_EXACT_TIME).hashCode(),
-            intentExact,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-        alarmManager.cancel(pendingIntentExact);
+        for (String type : notificationTypes) {
+            Intent intent = new Intent(context, ReminderNotificationService.class);
+            intent.putExtra(EXTRA_REMINDER_ID, reminder.getId());
+            intent.putExtra(EXTRA_NOTIFICATION_TYPE, type);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                (reminder.getId() + type).hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+            alarmManager.cancel(pendingIntent);
+        }
     }
 
     private static void scheduleNotification(Context context, Reminder reminder, long triggerTimeMillis, String notificationType) {
@@ -140,10 +168,17 @@ public class ReminderNotificationService extends BroadcastReceiver {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent);
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent);
+            }
+        } catch (SecurityException e) {
+            try {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent);
+            } catch (Exception fallbackException) {
+            }
         }
     }
 
@@ -202,14 +237,25 @@ public class ReminderNotificationService extends BroadcastReceiver {
         String title;
         String message;
 
-        if (TYPE_ONE_HOUR_BEFORE.equals(notificationType)) {
-            title = "Reminder in 1 Hour";
-            message = "Upcoming: " + reminder.getTitle() + " at " + reminder.getTimeString();
-        } else if (TYPE_EXACT_TIME.equals(notificationType)) {
-            title = "Reminder Now!";
-            message = reminder.getTitle() + " - It's time!";
-        } else {
-            return;
+        switch (notificationType) {
+            case TYPE_TWO_DAYS_BEFORE:
+                title = "Reminder in 2 Days";
+                message = "Upcoming: " + reminder.getTitle() + " in 2 days at " + reminder.getTimeString();
+                break;
+            case TYPE_ONE_DAY_BEFORE:
+                title = "Reminder Tomorrow";
+                message = "Upcoming: " + reminder.getTitle() + " tomorrow at " + reminder.getTimeString();
+                break;
+            case TYPE_ONE_HOUR_BEFORE:
+                title = "Reminder in 1 Hour";
+                message = "Upcoming: " + reminder.getTitle() + " at " + reminder.getTimeString();
+                break;
+            case TYPE_EXACT_TIME:
+                title = "Reminder Now!";
+                message = reminder.getTitle() + " - It's time!";
+                break;
+            default:
+                return;
         }
 
         if (!reminder.getDescription().isEmpty()) {

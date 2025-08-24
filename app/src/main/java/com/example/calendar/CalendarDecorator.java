@@ -54,12 +54,15 @@ public class CalendarDecorator {
                 new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()),
                 new SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()),
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()),
-                new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()),
+                new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()),
+                new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
             };
 
             Date birthday = null;
             for (SimpleDateFormat format : formats) {
                 try {
+                    format.setLenient(false);
                     birthday = format.parse(birthdayStr);
                     if (birthday != null) break;
                 } catch (Exception e) {
@@ -76,10 +79,13 @@ public class CalendarDecorator {
             Calendar selectedCalendar = Calendar.getInstance();
             selectedCalendar.setTimeInMillis(dateMillis);
 
-            return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
-                   birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
+            int birthdayMonth = birthdayCalendar.get(Calendar.MONTH);
+            int birthdayDay = birthdayCalendar.get(Calendar.DAY_OF_MONTH);
+            int selectedMonth = selectedCalendar.get(Calendar.MONTH);
+            int selectedDay = selectedCalendar.get(Calendar.DAY_OF_MONTH);
+
+            return birthdayMonth == selectedMonth && birthdayDay == selectedDay;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }

@@ -1,7 +1,6 @@
 package com.example.calendar;
 
 import android.os.AsyncTask;
-import android.util.Log;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,7 +9,6 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HolidayService {
-    private static final String TAG = "HolidayService";
     private Map<String, String> holidays;
 
     public interface HolidayCallback {
@@ -66,7 +64,6 @@ public class HolidayService {
                 return checkLocalHolidays(dateMillis);
             } catch (Exception e) {
                 error = e.getMessage();
-                Log.e(TAG, "Holiday check error: " + error);
                 return null;
             }
         }

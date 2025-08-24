@@ -19,37 +19,44 @@
     <Button
         android:id="@+id/btn_event"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:text="Event"
-        android:textColor="#FFFFFF"
+        android:textColor="#d4006d"
         android:textSize="16sp"
-        android:layout_marginBottom="12dp" />
+        android:background="@android:color/transparent"
+        android:layout_marginBottom="12dp"
+        android:paddingVertical="16dp" />
 
     <Button
         android:id="@+id/btn_birthday"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:text="Birthday"
-        android:textColor="#FFFFFF"
+        android:textColor="#d4006d"
         android:textSize="16sp"
-        android:layout_marginBottom="12dp" />
+        android:background="@android:color/transparent"
+        android:layout_marginBottom="12dp"
+        android:paddingVertical="16dp" />
 
     <Button
         android:id="@+id/btn_reminder"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:text="Reminder"
-        android:textColor="#FFFFFF"
+        android:textColor="#d4006d"
         android:textSize="16sp"
-        android:layout_marginBottom="24dp" />
+        android:background="@android:color/transparent"
+        android:layout_marginBottom="12dp"
+        android:paddingVertical="16dp" />
 
     <Button
         android:id="@+id/btn_cancel"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:text="Cancel"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:background="@android:color/transparent" />
+        android:background="@android:color/transparent"
+        android:paddingVertical="16dp" />
 
 </LinearLayout>

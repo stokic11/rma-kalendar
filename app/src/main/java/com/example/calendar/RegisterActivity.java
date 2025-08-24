@@ -29,11 +29,11 @@ public class RegisterActivity extends AppCompatActivity {
             setContentView(R.layout.activity_register);
             database = new Database(this);
             calendar = Calendar.getInstance();
+
             initViews();
             setupClickListeners();
         } catch (Exception e) {
-            Toast.makeText(this, "Error starting registration: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            finish();
+            Toast.makeText(this, "Error initializing registration: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -50,37 +50,31 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnRegister.setOnClickListener(v -> attemptRegistration());
+        btnRegister.setOnClickListener(v -> registerUser());
         tvLogin.setOnClickListener(v -> {
-            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+            startActivity(new Intent(this, LoginActivity.class));
             finish();
         });
+
         etBirthday.setOnClickListener(v -> showDatePicker());
-        etBirthday.setFocusable(false);
-        etBirthday.setClickable(true);
     }
 
     private void showDatePicker() {
         DatePickerDialog datePickerDialog = new DatePickerDialog(
-            this,
-            (view, year, month, dayOfMonth) -> {
-                calendar.set(Calendar.YEAR, year);
-                calendar.set(Calendar.MONTH, month);
-                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                etBirthday.setText(sdf.format(calendar.getTime()));
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    calendar.set(year, month, dayOfMonth);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    etBirthday.setText(sdf.format(calendar.getTime()));
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
         );
-
-        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
 
-    private void attemptRegistration() {
+    private void registerUser() {
         String firstName = etFirstName.getText().toString().trim();
         String lastName = etLastName.getText().toString().trim();
         String birthday = etBirthday.getText().toString().trim();
@@ -88,62 +82,33 @@ public class RegisterActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(firstName)) {
-            Toast.makeText(this, "First name is required", Toast.LENGTH_SHORT).show();
-            etFirstName.requestFocus();
+        if (TextUtils.isEmpty(firstName) || TextUtils.isEmpty(lastName) ||
+                TextUtils.isEmpty(birthday) || TextUtils.isEmpty(username) ||
+                TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmPassword)) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (TextUtils.isEmpty(lastName)) {
-            Toast.makeText(this, "Last name is required", Toast.LENGTH_SHORT).show();
-            etLastName.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(birthday)) {
-            Toast.makeText(this, "Birthday is required", Toast.LENGTH_SHORT).show();
-            etBirthday.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(username)) {
-            Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
-            etUsername.requestFocus();
-            return;
-        }
-        if (username.length() < 3) {
-            Toast.makeText(this, "Username must be at least 3 characters", Toast.LENGTH_SHORT).show();
-            etUsername.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
-            etPassword.requestFocus();
-            return;
-        }
-        if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
-            etPassword.requestFocus();
-            return;
-        }
+
         if (!password.equals(confirmPassword)) {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-            etConfirmPassword.requestFocus();
             return;
         }
-        if (database.usernameExists(username)) {
-            Toast.makeText(this, "Username already exists", Toast.LENGTH_SHORT).show();
-            etUsername.requestFocus();
+
+        if (password.length() < 6) {
+            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
             if (database.registerUser(firstName, lastName, birthday, username, password)) {
-                Toast.makeText(this, "Registration successful! Please login.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Registration successful! Please login.", Toast.LENGTH_LONG).show();
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
             } else {
-                Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Registration failed. Username might already exist.", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
-            Toast.makeText(this, "Registration error. Please try again.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Registration error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }

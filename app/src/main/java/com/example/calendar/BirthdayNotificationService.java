@@ -57,16 +57,16 @@ public class BirthdayNotificationService extends BroadcastReceiver {
         tomorrow.add(Calendar.DAY_OF_YEAR, 1);
         dayAfterTomorrow.add(Calendar.DAY_OF_YEAR, 2);
 
-        checkAndNotifyForDate(context, database, currentUser.getId(), today, "today");
-        checkAndNotifyForDate(context, database, currentUser.getId(), tomorrow, "tomorrow");
-        checkAndNotifyForDate(context, database, currentUser.getId(), dayAfterTomorrow, "in 2 days");
+        checkAndNotifyForDate(context, database, currentUser.getId(), today, "today", true);
+        checkAndNotifyForDate(context, database, currentUser.getId(), tomorrow, "tomorrow", false);
+        checkAndNotifyForDate(context, database, currentUser.getId(), dayAfterTomorrow, "in 2 days", false);
     }
 
-    private void checkAndNotifyForDate(Context context, Database database, int userId, Calendar date, String timeFrame) {
+    private void checkAndNotifyForDate(Context context, Database database, int userId, Calendar date, String timeFrame, boolean mandatory) {
         List<Birthday> birthdays = database.getBirthdaysForDate(userId, date.getTimeInMillis());
 
         for (Birthday birthday : birthdays) {
-            if (birthday.isNotificationsEnabled()) {
+            if (mandatory || birthday.isNotificationsEnabled()) {
                 sendBirthdayNotification(context, birthday, timeFrame);
             }
         }
@@ -128,6 +128,7 @@ public class BirthdayNotificationService extends BroadcastReceiver {
         try {
             notificationManager.notify(birthday.getId().hashCode(), builder.build());
         } catch (SecurityException e) {
+            // Handle permission denied
         }
     }
 

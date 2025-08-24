@@ -110,7 +110,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:text="LOGIN"
-                android:textColor="#FFFFFF"
+                style="?android:attr/borderlessButtonStyle"
+                android:textColor="#d4006d"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="30dp" />

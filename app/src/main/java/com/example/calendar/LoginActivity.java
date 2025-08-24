@@ -36,8 +36,7 @@ public class LoginActivity extends AppCompatActivity {
             initViews();
             setupClickListeners();
         } catch (Exception e) {
-            Toast.makeText(this, "Error starting app: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            finish();
+            Toast.makeText(this, "Error initializing login: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -50,37 +49,35 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnLogin.setOnClickListener(v -> attemptLogin());
-        tvRegister.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
+        btnLogin.setOnClickListener(v -> loginUser());
+        tvRegister.setOnClickListener(v -> {
+            startActivity(new Intent(this, RegisterActivity.class));
+        });
     }
 
-    private void attemptLogin() {
+    private void loginUser() {
         String username = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(username)) {
-            Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
-            etUsername.requestFocus();
+        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
-            etPassword.requestFocus();
-            return;
-        }
+        try {
+            if (database.loginUser(username, password)) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("is_logged_in", true);
+                editor.putString("username", username);
+                editor.apply();
 
-        if (database.loginUser(username, password)) {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("is_logged_in", true);
-            editor.putString("username", username);
-            editor.apply();
-
-            Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-        } else {
-            Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Login error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }
