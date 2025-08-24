@@ -102,7 +102,7 @@ public class EventCreationHelper {
     }
 
     public void showCreateEventDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.DarkDialogTheme);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_create_event, null);
 
         EditText etTitle = dialogView.findViewById(R.id.et_event_title);
@@ -156,6 +156,10 @@ public class EventCreationHelper {
         colorPurple.setOnClickListener(v -> selectColor(Color.parseColor("#9C27B0"), colorBlue, colorGreen, colorRed, colorOrange, colorPurple));
 
         selectColor(selectedColor, colorBlue, colorGreen, colorRed, colorOrange, colorPurple);
+
+        if (isEditMode) {
+            btnCreateEvent.setText("Update Event");
+        }
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 

@@ -32,7 +32,6 @@ public class RegisterActivity extends AppCompatActivity {
             initViews();
             setupClickListeners();
         } catch (Exception e) {
-            e.printStackTrace();
             Toast.makeText(this, "Error starting registration: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
         }
@@ -145,7 +144,6 @@ public class RegisterActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Toast.makeText(this, "Registration error. Please try again.", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
         }
     }
 }

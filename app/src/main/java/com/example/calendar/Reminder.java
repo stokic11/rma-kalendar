@@ -19,10 +19,10 @@ public class Reminder {
         this.title = title != null ? title : "";
         this.description = description != null ? description : "";
         this.dateMillis = dateMillis;
-        this.hour = 9; // Default to 9 AM
+        this.hour = 9;
         this.minute = 0;
         this.notificationsEnabled = notificationsEnabled;
-        this.color = Color.parseColor("#FFA500"); // Orange color for reminders
+        this.color = Color.parseColor("#FFA500");
     }
 
     public Reminder(String title, String description, long dateMillis, int hour, int minute, boolean notificationsEnabled) {
@@ -33,7 +33,7 @@ public class Reminder {
         this.hour = hour;
         this.minute = minute;
         this.notificationsEnabled = notificationsEnabled;
-        this.color = Color.parseColor("#FFA500"); // Orange color for reminders
+        this.color = Color.parseColor("#FFA500");
     }
 
     public String getId() { return id; }
@@ -79,6 +79,6 @@ public class Reminder {
     }
 
     public int getDurationInMinutes() {
-        return 30; // Default 30 minute duration for reminders
+        return 30;
     }
 }

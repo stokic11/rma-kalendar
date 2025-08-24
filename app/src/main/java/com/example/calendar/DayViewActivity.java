@@ -76,7 +76,6 @@ public class DayViewActivity extends AppCompatActivity {
         loadRemindersFromDatabase();
         renderEvents();
         checkCustomBirthdays(selectedDateMillis);
-        // Reminders are now displayed as event cards in the timeline, no strips needed
     }
 
     private void initViews() {
@@ -177,7 +176,6 @@ public class DayViewActivity extends AppCompatActivity {
             return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
                    birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -241,7 +239,6 @@ public class DayViewActivity extends AppCompatActivity {
                 if (!birthday.getDescription().isEmpty()) {
                     birthdayText.append(" - ").append(birthday.getDescription());
                 }
-                birthdayText.append(" (Tap to edit)");
 
                 TextView birthdayInfoView = new TextView(this);
                 birthdayInfoView.setText(birthdayText.toString());
@@ -250,12 +247,10 @@ public class DayViewActivity extends AppCompatActivity {
                 birthdayInfoView.setPadding(16, 8, 16, 8);
                 birthdayInfoView.setVisibility(View.VISIBLE);
 
-                // Make birthday strip clickable with better visual feedback
                 birthdayInfoView.setClickable(true);
                 birthdayInfoView.setFocusable(true);
                 birthdayInfoView.setOnClickListener(v -> showBirthdayDetailsDialog(birthday));
 
-                // Add ripple effect for better clickability indication
                 android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
                 drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
                 drawable.setColor(getResources().getColor(android.R.color.holo_orange_light));
@@ -273,7 +268,6 @@ public class DayViewActivity extends AppCompatActivity {
         for (CalendarEvent event : events) {
             createEventView(event);
         }
-        // Add reminders as event cards
         for (Reminder reminder : reminders) {
             createReminderView(reminder);
         }
@@ -357,7 +351,7 @@ public class DayViewActivity extends AppCompatActivity {
         LinearLayout background = (LinearLayout) cardView.getChildAt(0);
         background.setBackgroundColor(reminder.getColor());
 
-        tvTitle.setText("📝 " + reminder.getTitle()); // Add reminder icon
+        tvTitle.setText("📝 " + reminder.getTitle());
         tvTime.setText(reminder.getTimeString());
 
         if (reminder.getDescription() != null && !reminder.getDescription().isEmpty()) {
@@ -376,7 +370,7 @@ public class DayViewActivity extends AppCompatActivity {
 
     private void setEventPosition(View eventView, int startMinuteOfDay, int durationMinutes) {
         int topMargin = (int) dpToPx(startMinuteOfDay);
-        int height = Math.max((int) dpToPx(durationMinutes), (int) dpToPx(30));
+        int height = Math.max((int) dpToPx(durationMinutes), (int) dpToPx(60));
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, height);
         params.topMargin = topMargin;
@@ -501,7 +495,7 @@ public class DayViewActivity extends AppCompatActivity {
     }
 
     private void showEditEventDialog(CalendarEvent event) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DarkDialogTheme);
         builder.setTitle(event.getTitle())
                 .setMessage("Event: " + event.getTimeRange() + "\n" + event.getDescription())
                 .setPositiveButton("Edit", (dialog, which) -> {
@@ -546,7 +540,6 @@ public class DayViewActivity extends AppCompatActivity {
                 renderEvents();
                 refreshCustomDisplay();
 
-                // Trigger immediate notification check for testing
                 BirthdayNotificationService.checkAndSendImmediateNotifications(this);
             } else {
                 Toast.makeText(this, "Failed to create birthday", Toast.LENGTH_SHORT).show();
@@ -556,7 +549,7 @@ public class DayViewActivity extends AppCompatActivity {
     }
 
     private void showBirthdayDetailsDialog(Birthday birthday) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DarkDialogTheme);
         String message = "Names: " + birthday.getNamesText();
         if (!birthday.getDescription().isEmpty()) {
             message += "\nDescription: " + birthday.getDescription();
@@ -606,10 +599,8 @@ public class DayViewActivity extends AppCompatActivity {
                 renderEvents();
                 refreshCustomDisplay();
 
-                // Schedule precise notifications (1 hour before and at exact time)
                 ReminderNotificationService.scheduleReminderNotifications(this, reminder);
 
-                // Trigger immediate notification check for testing
                 ReminderNotificationService.checkAndSendImmediateNotifications(this);
             } else {
                 Toast.makeText(this, "Failed to create reminder", Toast.LENGTH_SHORT).show();
@@ -619,7 +610,7 @@ public class DayViewActivity extends AppCompatActivity {
     }
 
     private void showReminderDetailsDialog(Reminder reminder) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DarkDialogTheme);
         String message = "Title: " + reminder.getTitle();
         if (!reminder.getDescription().isEmpty()) {
             message += "\nDescription: " + reminder.getDescription();
@@ -633,7 +624,6 @@ public class DayViewActivity extends AppCompatActivity {
                     showEditReminderDialog(reminder);
                 })
                 .setNegativeButton("Delete", (dialog, which) -> {
-                    // Cancel existing notifications before deletion
                     ReminderNotificationService.cancelReminderNotifications(this, reminder);
 
                     boolean success = database.deleteReminder(reminder.getId(), currentUserId);
@@ -651,7 +641,6 @@ public class DayViewActivity extends AppCompatActivity {
     }
 
     private void showEditReminderDialog(Reminder reminder) {
-        // Cancel existing notifications before editing
         ReminderNotificationService.cancelReminderNotifications(this, reminder);
 
         ReminderCreationHelper helper = new ReminderCreationHelper(this, reminder, updatedReminder -> {
@@ -661,11 +650,9 @@ public class DayViewActivity extends AppCompatActivity {
                 renderEvents();
                 refreshCustomDisplay();
 
-                // Schedule new notifications for the updated reminder
                 ReminderNotificationService.scheduleReminderNotifications(this, updatedReminder);
             } else {
                 Toast.makeText(this, "Failed to update reminder", Toast.LENGTH_SHORT).show();
-                // If update failed, reschedule the original reminder's notifications
                 ReminderNotificationService.scheduleReminderNotifications(this, reminder);
             }
         });
@@ -673,7 +660,6 @@ public class DayViewActivity extends AppCompatActivity {
     }
 
     private void checkCustomReminders(long selectedDateMillis) {
-        // Reminders are now displayed as event cards in the timeline, no strips needed
     }
 
     private void refreshCustomDisplay() {
@@ -684,7 +670,6 @@ public class DayViewActivity extends AppCompatActivity {
             }
         }
         checkCustomBirthdays(selectedDateMillis);
-        // Reminders are now displayed as event cards in the timeline, no strips needed
     }
 
     private float dpToPx(float dp) {

@@ -122,12 +122,10 @@ public class Database extends SQLiteOpenHelper {
                     "FOREIGN KEY(" + USER_ID + ") REFERENCES " + TABLE_USERS + "(" + ID + "))");
         }
         if (oldVersion < 4) {
-            // Add hour and minute columns to existing reminders table
             try {
                 db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_HOUR + " INTEGER DEFAULT 9");
                 db.execSQL("ALTER TABLE " + TABLE_REMINDERS + " ADD COLUMN " + REMINDER_MINUTE + " INTEGER DEFAULT 0");
             } catch (Exception e) {
-                // If ALTER fails, recreate the table
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_REMINDERS);
                 db.execSQL("CREATE TABLE " + TABLE_REMINDERS + " (" +
                         REMINDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -228,15 +226,13 @@ public class Database extends SQLiteOpenHelper {
         String dateStr = cursor.getString(cursor.getColumnIndexOrThrow(REMINDER_DATE));
         long dateMillis = dateTimeStringToMillis(dateStr);
 
-        int hour = 9; // default
-        int minute = 0; // default
+        int hour = 9;
+        int minute = 0;
 
-        // Check if hour and minute columns exist (for backward compatibility)
         try {
             hour = cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_HOUR));
             minute = cursor.getInt(cursor.getColumnIndexOrThrow(REMINDER_MINUTE));
         } catch (Exception e) {
-            // If columns don't exist, use defaults
         }
 
         Reminder reminder = new Reminder(
@@ -548,7 +544,6 @@ public class Database extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return birthdays;
     }
@@ -576,7 +571,6 @@ public class Database extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return birthdays;
     }
@@ -606,7 +600,6 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
-    // Reminder methods
     public boolean saveReminder(Reminder reminder, int userId) {
         try (SQLiteDatabase db = this.getWritableDatabase()) {
             ContentValues values = new ContentValues();
@@ -635,7 +628,6 @@ public class Database extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return reminders;
     }
@@ -644,9 +636,9 @@ public class Database extends SQLiteOpenHelper {
         List<Reminder> reminders = new ArrayList<>();
         java.util.Calendar targetCal = java.util.Calendar.getInstance();
         targetCal.setTimeInMillis(dateMillis);
+        int targetYear = targetCal.get(java.util.Calendar.YEAR);
         int targetMonth = targetCal.get(java.util.Calendar.MONTH);
         int targetDay = targetCal.get(java.util.Calendar.DAY_OF_MONTH);
-        int targetYear = targetCal.get(java.util.Calendar.YEAR);
 
         try (SQLiteDatabase db = this.getReadableDatabase();
              Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_REMINDERS + " WHERE " + USER_ID + " = ?",
@@ -665,7 +657,6 @@ public class Database extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return reminders;
     }

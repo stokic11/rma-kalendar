@@ -139,7 +139,6 @@
                 android:layout_height="48dp"
                 android:text="Create Reminder"
                 android:textColor="#FFFFFF"
-                android:background="#FFA500"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp" />
 

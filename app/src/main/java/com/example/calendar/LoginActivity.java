@@ -36,7 +36,6 @@ public class LoginActivity extends AppCompatActivity {
             initViews();
             setupClickListeners();
         } catch (Exception e) {
-            e.printStackTrace();
             Toast.makeText(this, "Error starting app: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
         }

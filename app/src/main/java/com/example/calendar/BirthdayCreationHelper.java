@@ -45,7 +45,7 @@ public class BirthdayCreationHelper {
     }
 
     public void showCreateBirthdayDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.DarkDialogTheme);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_create_birthday, null);
 
         layoutNames = dialogView.findViewById(R.id.layout_names);

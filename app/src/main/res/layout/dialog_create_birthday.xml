@@ -136,7 +136,6 @@
                 android:layout_height="48dp"
                 android:text="Create Birthday"
                 android:textColor="#FFFFFF"
-                android:background="#FF69B4"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp" />
 

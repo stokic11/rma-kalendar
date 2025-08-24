@@ -2,6 +2,7 @@ package com.example.calendar;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -38,7 +39,7 @@ public class ReminderCreationHelper {
     }
 
     public void showCreateReminderDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.DarkDialogTheme);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_create_reminder, null);
 
         EditText etTitle = dialogView.findViewById(R.id.et_reminder_title);
@@ -53,13 +54,8 @@ public class ReminderCreationHelper {
         npHour.setMaxValue(23);
         npHour.setValue(9);
 
-        String[] minuteValues = new String[4];
-        for (int i = 0; i < 4; i++) {
-            minuteValues[i] = String.format("%02d", i * 15);
-        }
         npMinute.setMinValue(0);
-        npMinute.setMaxValue(3);
-        npMinute.setDisplayedValues(minuteValues);
+        npMinute.setMaxValue(59);
         npMinute.setValue(0);
 
         if (isEditMode) {
@@ -70,7 +66,7 @@ public class ReminderCreationHelper {
             etTitle.setText(editingReminder.getTitle());
             etDescription.setText(editingReminder.getDescription());
             npHour.setValue(editingReminder.getHour());
-            npMinute.setValue(editingReminder.getMinute() / 15);
+            npMinute.setValue(editingReminder.getMinute());
             switchNotifications.setChecked(editingReminder.isNotificationsEnabled());
         }
 
@@ -97,7 +93,7 @@ public class ReminderCreationHelper {
 
             String description = etDescription.getText().toString().trim();
             int hour = npHour.getValue();
-            int minute = npMinute.getValue() * 15;
+            int minute = npMinute.getValue();
             boolean notificationsEnabled = switchNotifications.isChecked();
 
             Calendar reminderDate = Calendar.getInstance();

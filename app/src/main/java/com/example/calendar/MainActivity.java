@@ -69,13 +69,11 @@ public class MainActivity extends AppCompatActivity {
             EdgeToEdge.enable(this);
             setContentView(R.layout.activity_main);
 
-            // Initialize permission launcher
             requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (isGranted) {
                         Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
-                        // Check for immediate notifications
                         BirthdayNotificationService.checkAndSendImmediateNotifications(this);
                     } else {
                         Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
@@ -104,10 +102,8 @@ public class MainActivity extends AppCompatActivity {
             setupNavigationControls();
             customizeCalendarAppearance();
 
-            // Initialize birthday notification system
             BirthdayNotificationService.scheduleDailyNotificationCheck(this);
 
-            // Request notification permission if needed
             requestNotificationPermission();
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -116,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
                 return insets;
             });
         } catch (Exception e) {
-            e.printStackTrace();
             Toast.makeText(this, "Error starting main activity: " + e.getMessage(), Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
@@ -128,11 +123,9 @@ public class MainActivity extends AppCompatActivity {
             if (!BirthdayNotificationService.hasNotificationPermission(this)) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
             } else {
-                // Check for immediate notifications if permission already granted
                 BirthdayNotificationService.checkAndSendImmediateNotifications(this);
             }
         } else {
-            // For older versions, check immediate notifications
             BirthdayNotificationService.checkAndSendImmediateNotifications(this);
         }
     }
@@ -313,7 +306,6 @@ public class MainActivity extends AppCompatActivity {
                 updateNavigationHeader();
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -342,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault());
         String dateStr = dateFormat.format(new Date(dateMillis));
 
-        StringBuilder infoText = new StringBuilder("Selected: " + dateStr);
+        StringBuilder infoText = new StringBuilder(dateStr);
 
         boolean isUserBirthdayDate = isBirthday(dateMillis);
         List<Birthday> customBirthdays = database.getBirthdaysForDate(currentUser.getId(), dateMillis);
@@ -391,7 +383,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            SimpleDateFormat birthdayFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat birthdayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
             Date birthday = birthdayFormat.parse(currentUser.getBirthday());
 
             Calendar birthdayCalendar = Calendar.getInstance();
@@ -403,7 +395,6 @@ public class MainActivity extends AppCompatActivity {
             return birthdayCalendar.get(Calendar.MONTH) == selectedCalendar.get(Calendar.MONTH) &&
                     birthdayCalendar.get(Calendar.DAY_OF_MONTH) == selectedCalendar.get(Calendar.DAY_OF_MONTH);
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
